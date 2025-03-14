@@ -1,0 +1,18 @@
+-r requirements.txt
+
+# Testing
+pytest==7.4.0
+pytest-cov==4.1.0
+
+# Linting and formatting
+black==23.7.0
+isort==5.12.0
+flake8==6.1.0
+mypy==1.5.1
+
+# Type stubs for better type checking
+types-boto3==1.0.2
+types-requests==2.31.0
+
+# Local development
+python-dotenv==1.0.0 
