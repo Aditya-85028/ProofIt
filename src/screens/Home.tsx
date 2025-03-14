@@ -3,7 +3,7 @@ import { View, Text, Image, TouchableOpacity, TextInput } from "react-native";
 import { Camera } from "expo-camera";
 import { useNavigation } from "@react-navigation/native";
 
-export default function HabitTrackerScreen() {
+export default function Home() {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
   const [habit, setHabit] = useState<string>("");
@@ -18,7 +18,7 @@ export default function HabitTrackerScreen() {
     if (!hasPermission) {
       await requestCameraPermission();
     }
-    navigation.navigate("CameraScreen", { setCapturedPhoto });
+    //navigation.navigate("CameraScreen", { setCapturedPhoto });
   };
 
   return (
