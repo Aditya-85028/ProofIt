@@ -13,7 +13,6 @@ export default function HabitTrackerScreen() {
     const { status } = await Camera.requestCameraPermissionsAsync();
     setHasPermission(status === "granted");
   };
-  
 
   const handleCapturePhoto = async () => {
     if (!hasPermission) {
@@ -24,11 +23,26 @@ export default function HabitTrackerScreen() {
 
   return (
     <View style={{ flex: 1, alignItems: "center", padding: 16, backgroundColor: "#f3f3f3" }}>
-      <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 10 }}>Daily Habit Tracker</Text>
-      <View style={{ width: "100%", padding: 16, backgroundColor: "white", borderRadius: 10, shadowOpacity: 0.2 }}>
+      <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 10 }}>ProofIt!</Text>
+      <View
+        style={{
+          width: "100%",
+          padding: 16,
+          backgroundColor: "white",
+          borderRadius: 10,
+          shadowOpacity: 0.2,
+        }}
+      >
         <Text style={{ fontSize: 16, fontWeight: "600" }}>Enter Your Habit:</Text>
         <TextInput
-          style={{ width: "100%", borderColor: "#ccc", borderWidth: 1, padding: 10, marginTop: 10, borderRadius: 5 }}
+          style={{
+            width: "100%",
+            borderColor: "#ccc",
+            borderWidth: 1,
+            padding: 10,
+            marginTop: 10,
+            borderRadius: 5,
+          }}
           placeholder="E.g., Workout, Reading"
           value={habit}
           onChangeText={setHabit}
@@ -49,7 +63,9 @@ export default function HabitTrackerScreen() {
         />
       )}
 
-      <TouchableOpacity style={{ marginTop: 20, padding: 12, backgroundColor: "green", borderRadius: 8 }}>
+      <TouchableOpacity
+        style={{ marginTop: 20, padding: 12, backgroundColor: "green", borderRadius: 8 }}
+      >
         <Text style={{ color: "white", fontWeight: "bold" }}>Submit Habit</Text>
       </TouchableOpacity>
     </View>
