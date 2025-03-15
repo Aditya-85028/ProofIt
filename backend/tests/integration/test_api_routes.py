@@ -2,16 +2,24 @@ import pytest
 from fastapi.testclient import TestClient
 from main import app
 
+
 def test_habits_endpoint(api_client: TestClient):
     """Test the /habits endpoint"""
-    response = api_client.get("/habits")
+    response = api_client.get("/habits?user_id=123")
     assert response.status_code == 200
-    assert response.json() == {"Hello": "World"}
+    data = response.json()
+    assert "habits" in data
+    assert isinstance(data["habits"], list)
 
 def test_habits_endpoint_headers(api_client: TestClient):
     """Test that the /habits endpoint returns correct headers"""
-    response = api_client.get("/habits")
+    response = api_client.get("/habits?user_id=123")
     assert response.headers["content-type"] == "application/json"
+
+def test_habits_endpoint_missing_user_id(api_client: TestClient):
+    """Test the /habits endpoint when user_id is missing"""
+    response = api_client.get("/habits")
+    assert response.status_code == 422
 
 @pytest.mark.parametrize(
     "http_method,endpoint",

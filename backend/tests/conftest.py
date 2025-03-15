@@ -1,14 +1,20 @@
+import os
+import sys
+
+# Add the parent directory to the Python path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import pytest
 from fastapi.testclient import TestClient
 from main import app
 import json
-import os
 from typing import Generator, Dict, Any
 
 @pytest.fixture
 def api_client() -> TestClient:
     """Fixture for FastAPI test client"""
-    return TestClient(app)
+    print(type(app))
+    return TestClient(app = app)
 
 @pytest.fixture
 def lambda_context():
