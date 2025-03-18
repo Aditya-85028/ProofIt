@@ -22,8 +22,8 @@ const LoginScreen = () => {
       setSession(response); // Save session for OTP verification
       setStep("enterOTP");
       Alert.alert("Success", "OTP sent to your phone!");
-    } catch (error: any) {
-      Alert.alert("Error", error.message);
+    } catch (error) {
+      Alert.alert("Error", "ERROR SENDING OTP");
     }
     setLoading(false);
   };
@@ -38,8 +38,8 @@ const LoginScreen = () => {
       await confirmOTP(session, code);
       Alert.alert("Success", "Logged in successfully!");
       router.push("/home"); // Navigate to the home screen
-    } catch (error: any) {
-      Alert.alert("Error", error.message);
+    } catch (error) {
+      Alert.alert("Error", "ERROR VERIFYING OTP");
     }
     setLoading(false);
   };

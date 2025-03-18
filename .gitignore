@@ -86,3 +86,8 @@ coverage
 .npm
 .eslintcache
 .cache 
+
+# amplify
+.amplify
+amplify_outputs*
+amplifyconfiguration*
