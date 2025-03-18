@@ -4,7 +4,7 @@ from boto3.dynamodb.conditions import Key
 
 
 router = APIRouter(prefix="habits", tags=["Habits"])
-dynamodb = boto3.resource("dynamodb", region_name="us-west-1")  # Ensure correct region
+dynamodb = boto3.resource("dynamodb", region_name="us-east-1")  # Ensure correct region
 table = dynamodb.Table("HabbitUserTable")  # Ensure the correct table name
 
 @router.get("/")

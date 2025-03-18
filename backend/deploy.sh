@@ -15,6 +15,6 @@ zip -g deployment.zip -r app
 zip -g deployment.zip main.py
 
 echo "🚀 Deploying to AWS Lambda..."
-aws lambda update-function-code --function-name HabbitLambda --zip-file fileb://deployment.zip
+aws lambda update-function-code --function-name habbit-backend --zip-file fileb://deployment.zip
 
 echo "✅ Deployment Complete!"
