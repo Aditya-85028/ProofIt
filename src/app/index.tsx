@@ -8,7 +8,7 @@ const Welcome = () => {
   const router = useRouter();
 
   const handleContinue = () => {
-    router.replace("/home"); //
+    router.replace("/login"); //
   };
 
   return (

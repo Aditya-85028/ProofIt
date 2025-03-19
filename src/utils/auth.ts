@@ -35,6 +35,7 @@ export const sendOTP = async (phoneNumber: string) => {
     const { nextStep } = await signIn({
       username: phoneNumber,
     });
+    console.log("OTP request has been sent");
     return nextStep;
   } catch (error) {
     throw new Error("u didnt enter phone freak");
