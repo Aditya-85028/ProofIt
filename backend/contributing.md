@@ -35,6 +35,7 @@ python3.10 -m venv venv
 
 4. Install development dependencies:
 ```bash
+pip install -r requirements.txt
 pip install -r requirements-dev.txt
 ```
 
