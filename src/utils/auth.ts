@@ -1,23 +1,62 @@
-import { Amplify, Auth } from "aws-amplify";
-import awsconfig from "./aws-exports";
+import { AuthNextSignInStep, AuthUserAttributeKey } from "@aws-amplify/auth/dist/esm/types";
+import { Amplify } from "aws-amplify";
+import { signIn, confirmSignIn } from "aws-amplify/auth";
 
-Amplify.configure(awsconfig);
+Amplify.configure({
+  Auth: {
+    Cognito: {
+      userPoolId: process.env.COGNITO_USER_POOL_ID || "",
+      userPoolClientId: process.env.COGNITO_USER_POOL_CLIENT_ID || "",
+      identityPoolId: process.env.COGNITO_IDENTITY_POOL_ID || "",
+      loginWith: {
+        phone: true,
+      },
+      signUpVerificationMethod: "code",
+      userAttributes: {
+        phone_number: {
+          required: true,
+        },
+      },
+      allowGuestAccess: true,
+      passwordFormat: {
+        minLength: 8,
+        requireLowercase: true,
+        requireUppercase: true,
+        requireNumbers: true,
+        requireSpecialCharacters: true,
+      },
+    },
+  },
+});
 
 // Send OTP to the user's phone number
 export const sendOTP = async (phoneNumber: string) => {
   try {
-    const response = await Auth.signIn(phoneNumber);
-    return response; // AWS Cognito expects this for multi-step authentication
-  } catch (error: any) {
-    throw new Error(error.message);
+    const { nextStep } = await signIn({
+      username: phoneNumber,
+    });
+    console.log("OTP request has been sent");
+    return nextStep;
+  } catch (error) {
+    throw new Error("u didnt enter phone freak");
   }
 };
 
-// Confirm OTP to complete login
-export const confirmOTP = async (phoneNumber: string, code: string) => {
+export const confirmOTP = async (
+  nextStep: AuthNextSignInStep<AuthUserAttributeKey>,
+  code: string
+) => {
   try {
-    return await Auth.sendCustomChallengeAnswer(phoneNumber, code);
-  } catch (error: any) {
-    throw new Error(error.message);
+    if (nextStep.signInStep === "CONFIRM_SIGN_IN_WITH_SMS_CODE") {
+      const { isSignedIn } = await confirmSignIn({
+        challengeResponse: code,
+      });
+
+      if (isSignedIn) {
+        console.log("Signed in successfully");
+      }
+    }
+  } catch (error) {
+    throw new Error("Invalid OTP");
   }
 };

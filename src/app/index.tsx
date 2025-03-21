@@ -8,7 +8,7 @@ const Welcome = () => {
   const router = useRouter();
 
   const handleContinue = () => {
-    router.replace("/home"); // This will navigate to the tabs layout, which starts with Home
+    router.replace("/login"); //
   };
 
   return (

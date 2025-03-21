@@ -3,6 +3,9 @@ from main import app
 import boto3
 import subprocess
 import json
+import os
+import boto3
+import aioboto3
 from dotenv import load_dotenv
 
 # Load environment variables from .env file if it exists
@@ -30,11 +33,16 @@ def setup_local_aws():
             print("✅ AWS SSO session refreshed successfully!")
         except subprocess.CalledProcessError:
             print("❌ AWS SSO login failed. Please run `aws sso login --profile default` manually.")
+    """Setup local AWS credentials if needed"""
+    if not os.getenv('AWS_ACCESS_KEY_ID'):
+        print("⚠️  No AWS credentials found. Using dummy values for local development.")
+        os.environ['AWS_ACCESS_KEY_ID'] = 'dummy'
+        os.environ['AWS_SECRET_ACCESS_KEY'] = 'dummy'
+        os.environ['AWS_DEFAULT_REGION'] = 'us-east-1'
 
 def main():
     """Run the FastAPI application locally"""
     setup_local_aws()
-
     # Print helpful information
     print("🚀 Starting local development server...")
     print("📝 API Documentation available at:")
@@ -53,3 +61,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

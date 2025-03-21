@@ -22,8 +22,8 @@ const LoginScreen = () => {
       setSession(response); // Save session for OTP verification
       setStep("enterOTP");
       Alert.alert("Success", "OTP sent to your phone!");
-    } catch (error: any) {
-      Alert.alert("Error", error.message);
+    } catch (error) {
+      Alert.alert("Error", "ERROR SENDING OTP");
     }
     setLoading(false);
   };
@@ -38,8 +38,8 @@ const LoginScreen = () => {
       await confirmOTP(session, code);
       Alert.alert("Success", "Logged in successfully!");
       router.push("/home"); // Navigate to the home screen
-    } catch (error: any) {
-      Alert.alert("Error", error.message);
+    } catch (error) {
+      Alert.alert("Error", "ERROR VERIFYING OTP");
     }
     setLoading(false);
   };
@@ -81,7 +81,7 @@ const LoginScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 20 },
+  container: { backgroundColor: "#FFFFFF", flex: 1, justifyContent: "center", padding: 20 },
   title: { fontSize: 24, fontWeight: "bold", textAlign: "center", marginBottom: 20 },
   input: { borderWidth: 1, borderColor: "#ccc", padding: 10, borderRadius: 5, marginBottom: 10 },
   button: { backgroundColor: "#007bff", padding: 15, borderRadius: 5, alignItems: "center" },
