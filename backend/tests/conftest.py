@@ -13,7 +13,6 @@ from typing import Generator, Dict, Any
 @pytest.fixture
 def api_client() -> TestClient:
     """Fixture for FastAPI test client"""
-    print(type(app))
     return TestClient(app = app)
 
 @pytest.fixture
