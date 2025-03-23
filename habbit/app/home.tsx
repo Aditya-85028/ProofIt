@@ -36,10 +36,10 @@ const mockPosts: Post[] = [
   },
   {
     id: '2',
-    username: 'mike_coder',
+    username: 'some_fool',
     avatar: require('../assets/images/placeholder-avatar-dog.svg'),
     avatarState: 'happy',
-    image: require('../assets/images/placeholder-post-1.svg'),
+    image: require('../assets/images/adi.png'),
     caption: 'Daily meditation session ✨',
     timestamp: '4 hours ago',
     streak: 12,
