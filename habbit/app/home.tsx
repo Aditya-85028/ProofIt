@@ -15,7 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 type Post = {
   id: string;
   username: string;
-  avatar: any;
+  profile_picture: any;
   avatarState: 'happy' | 'sad' | 'idle';
   image: any;
   caption?: string;
@@ -27,7 +27,7 @@ const mockPosts: Post[] = [
   {
     id: '1',
     username: 'Aditya8502',
-    avatar: require('../assets/images/placeholder-avatar-dog.svg'),
+    profile_picture: require('../assets/images/placeholder-avatar-dog.svg'),
     avatarState: 'happy',
     image: require('../assets/images/adi.png'),
     caption: 'Morning run completed! 🏃‍♀️',
@@ -37,7 +37,7 @@ const mockPosts: Post[] = [
   {
     id: '2',
     username: 'some_fool',
-    avatar: require('../assets/images/placeholder-avatar-dog.svg'),
+    profile_picture: require('../assets/images/placeholder-avatar-dog.svg'),
     avatarState: 'happy',
     image: require('../assets/images/adi.png'),
     caption: 'Daily meditation session ✨',
@@ -69,7 +69,7 @@ export default function HomeScreen() {
         {/* Post Header */}
         <View style={styles.header}>
           <View style={styles.avatarWrapper}>
-            <Image source={item.avatar} style={styles.avatar} />
+            <Image source={item.profile_picture} style={styles.avatar} />
             <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
           </View>
 

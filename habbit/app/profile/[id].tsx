@@ -6,7 +6,7 @@ const Profile = () => {
     <ScrollView contentContainerStyle={styles.container}>
       {/* Profile Header */}
       <View style={styles.header}>
-        <Image source={require("@/assets/images/not-found.png")} style={styles.avatar} />
+        <Image source={{uri: 'https://reactnative.dev/img/tiny_logo.png',}} style={styles.avatar} />
         <Text style={styles.username}>Imran Haidery</Text>
       </View>
 
@@ -19,7 +19,7 @@ const Profile = () => {
       <View style={styles.gallery}>
         {Array.from({ length: 9 }).map((_, i) => (
           <View key={i} style={styles.imageContainer}>
-            <Image source={require("@/assets/images/adi.png")} style={styles.galleryImage} />
+            <Image source={{uri: 'https://reactnative.dev/img/tiny_logo.png',}} style={styles.galleryImage} />
           </View>
         ))}
       </View>
