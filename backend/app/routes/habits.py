@@ -1,27 +1,23 @@
+from fastapi import APIRouter, Query, HTTPException
 import boto3
-from fastapi import APIRouter, HTTPException, Query
 from boto3.dynamodb.conditions import Key
 
+router = APIRouter()
 
-router = APIRouter(prefix="habits", tags=["Habits"])
-dynamodb = boto3.resource("dynamodb", region_name="us-east-1")  # Ensure correct region
-table = dynamodb.Table("HabbitUserTable")  # Ensure the correct table name
-
-@router.get("/")
-async def get_user_habits(user_id: str = Query(..., description="User ID to fetch habits")):
+@router.get("/habits")
+def get_habits(phone_number: str = Query(..., description="User's phone number")):
+    """Fetch habits from DynamoDB based on phone number."""
     try:
+        dynamodb = boto3.resource("dynamodb", region_name="us-east-1")
+        table = dynamodb.Table("hb-user-table")
 
-        # Query DynamoDB for user's habits
         response = table.query(
-            KeyConditionExpression=Key("user_id").eq(user_id)
+            KeyConditionExpression=Key("phone_number").eq(phone_number)
         )
 
-        # Extract habits from response
         habits = response.get("Items", [])
-
         if not habits:
-            return {"message": "No habits found for this user.", "habits": []}
-
+            return {"message": "User not found", "habits": []}
 
         return {"habits": habits}
 

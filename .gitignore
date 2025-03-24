@@ -92,3 +92,9 @@ coverage
 .amplify
 amplify_outputs*
 amplifyconfiguration*
+
+#backend-test
+.pyc
+.__pycache__
+/backend/package
+/backend/deployment.zip
