@@ -31,12 +31,15 @@ function AuthGate() {
           console.log("✅ Username:", username);
           console.log("🆔 User ID:", userId);
           console.log("📧 Email:", email);
+          const url = `https://y8lbtj64c9.execute-api.us-east-1.amazonaws.com/prod/create_user?user_id=${encodeURIComponent(userId)}&phone_number=${encodeURIComponent(email)}`;
+          console.log("🚀 Requesting:", url);
+
   
           // 🔥 Call your backend to create the user
           const res = await fetch(
             `https://y8lbtj64c9.execute-api.us-east-1.amazonaws.com/prod/create_user?user_id=${encodeURIComponent(
               userId
-            )}&email=${encodeURIComponent(email)}`,
+            )}&phone_number=${encodeURIComponent(email)}`,
             {
               method: "POST",
             }
