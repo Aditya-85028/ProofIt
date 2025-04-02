@@ -8,14 +8,15 @@ router = APIRouter()
 
 # Initialize DynamoDB client
 dynamodb = boto3.resource("dynamodb", region_name="us-east-1")
-habit_table = dynamodb.Table("hb-habit-table")
+habit_table = dynamodb.Table("hb-habits-table")
 user_table = dynamodb.Table("hb-user-table")
 
 @router.post("/add_habit")
 def add_habit(
     user_id: str = Query(..., description="User's unique ID"),
     habit_name: str = Query(..., description="Name of the habit"),
-    cadence: int = Query(..., description="Frequency in days (1-7)", ge=1, le=7)
+    cadence: int = Query(..., description="Frequency in days (1-7)", ge=1, le=7),
+    color: str = Query(..., description="Color for the habit")
 ):
     """Add a new habit for a user in DynamoDB."""
     try:
@@ -27,12 +28,17 @@ def add_habit(
         habit_id = str(uuid.uuid4())
         created_at = datetime.utcnow().isoformat()
         
-        # Add the habit to habit table in DynamoDB
+        # Add the habit to habit table in DynamoDB with new fields
         habit_table.put_item(Item={
             "user_id": user_id,
             "habit_id": habit_id,
             "habit_name": habit_name,
+            "color": color,
             "cadence": cadence,
+            "completed_dates": [],  # Empty list for completed dates
+            "posts": [],  # Empty list for post objects
+            "reminder": True,  # Default reminder setting
+            "streak": 0,  # Initial streak count
             "created_at": created_at
         })
         
@@ -58,7 +64,12 @@ def add_habit(
                 "user_id": user_id,
                 "habit_id": habit_id,
                 "habit_name": habit_name,
+                "color": color,
                 "cadence": cadence,
+                "completed_dates": [],
+                "posts": [],
+                "reminder": False,
+                "streak": 0,
                 "created_at": created_at
             }
         }

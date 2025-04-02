@@ -1,8 +1,10 @@
-import React from "react";
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { getCurrentUser } from "aws-amplify/auth";
+import { fetchUserHabits } from "../../utils/api";
 
 type Habbit = {
   id: string;
@@ -10,54 +12,88 @@ type Habbit = {
   streak: number;
   goal: string;
   progress: number;
+  color?: string; // Added color property
 };
 
-const mockHabbits: Habbit[] = [
-  {
-    id: "1",
-    name: "Morning Run",
-    streak: 7,
-    goal: "Run 5km daily",
-    progress: 0.7,
-  },
-  {
-    id: "2",
-    name: "Meditation",
-    streak: 12,
-    goal: "Meditate 15 mins daily",
-    progress: 0.9,
-  },
-  {
-    id: "3",
-    name: "Reading",
-    streak: 3,
-    goal: "Read 30 pages daily",
-    progress: 0.4,
-  },
-];
 
-const HabbitCard = ({ habbit }: { habbit: Habbit }) => (
-  <View style={styles.card}>
-    <View style={styles.cardHeader}>
-      <Text style={styles.habbitName}>{habbit.name}</Text>
-      <View style={styles.streakBadge}>
-        <Ionicons name="flame" size={16} color="#FF9800" />
-        <Text style={styles.streakText}>{habbit.streak}</Text>
+
+const HabbitCard = ({ habbit }: { habbit: Habbit }) => {
+  // Determine text colors based on background color for better contrast
+  const cardBackgroundColor = habbit.color || "#4CAF50";
+  // Use white text for better contrast on colored backgrounds
+  const textColor = "#FFFFFF";
+  const secondaryTextColor = "rgba(255, 255, 255, 0.8)";
+  
+  return (
+    <View style={[styles.card, { backgroundColor: cardBackgroundColor }]}>
+      <View style={styles.cardHeader}>
+        <Text style={[styles.habbitName, { color: textColor }]}>{habbit.name}</Text>
+        <View style={[styles.streakBadge, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]}>
+          <Ionicons name="flame" size={16} color="#FFFFFF" />
+          <Text style={[styles.streakText, { color: textColor }]}>{habbit.streak}</Text>
+        </View>
+      </View>
+
+      <Text style={[styles.goalText, { color: secondaryTextColor }]}>{habbit.goal}</Text>
+
+      <View style={styles.progressContainer}>
+        <View style={[styles.progressBar, { backgroundColor: 'rgba(255, 255, 255, 0.3)' }]}>
+          <View 
+            style={[
+              styles.progressFill, 
+              { 
+                width: `${habbit.progress * 100}%`,
+                backgroundColor: 'rgba(255, 255, 255, 0.8)' // White with opacity for progress bar
+              }
+            ]} 
+          />
+        </View>
+        <Text style={[styles.progressText, { color: textColor }]}>{Math.round(habbit.progress * 100)}%</Text>
       </View>
     </View>
-
-    <Text style={styles.goalText}>{habbit.goal}</Text>
-
-    <View style={styles.progressContainer}>
-      <View style={styles.progressBar}>
-        <View style={[styles.progressFill, { width: `${habbit.progress * 100}%` }]} />
-      </View>
-      <Text style={styles.progressText}>{Math.round(habbit.progress * 100)}%</Text>
-    </View>
-  </View>
-);
+  );
+};
 
 const Habbits = () => {
+  const [habits, setHabits] = useState<Habbit[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchHabits = async () => {
+      try {
+        // Get the current user's ID
+        const { userId } = await getCurrentUser();
+        
+        // Fetch the user's habits
+        const response = await fetchUserHabits(userId);
+        
+        if (response && response.habits) {
+          // Transform the API response to match our Habbit type
+          const transformedHabits = response.habits.map((habit: any) => ({
+            id: habit.habit_id || habit.id || String(Math.random()),
+            name: habit.habit_name || habit.name,
+            streak: habit.streak || 0,
+            goal: habit.goal || `Do ${habit.habit_name} every day`,
+            progress: habit.progress || 0.5,
+            color: habit.color || "#4CAF50"
+          }));
+          
+          setHabits(transformedHabits);
+        } else {
+          setHabits([]);
+        }
+      } catch (err) {
+        console.error("Error fetching habits:", err);
+        setError("Failed to load habits. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchHabits();
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -67,13 +103,70 @@ const Habbits = () => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content}>
-        {mockHabbits.map((habbit) => (
-          <HabbitCard key={habbit.id} habbit={habbit} />
-        ))}
-      </ScrollView>
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#4CAF50" />
+          <Text style={styles.loadingText}>Loading habits...</Text>
+        </View>
+      ) : error ? (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity 
+            style={styles.retryButton}
+            onPress={() => {
+              setIsLoading(true);
+              setError(null);
+              // Re-fetch habits
+              const fetchHabits = async () => {
+                try {
+                  const { userId } = await getCurrentUser();
+                  const response = await fetchUserHabits(userId);
+                  
+                  if (response && response.habits) {
+                    const transformedHabits = response.habits.map((habit: any) => ({
+                      id: habit.habit_id || habit.id || String(Math.random()),
+                      name: habit.habit_name || habit.name,
+                      streak: habit.streak || 0,
+                      goal: habit.goal || `Do ${habit.habit_name} every day`,
+                      progress: habit.progress || 0.5,
+                      color: habit.color || "#4CAF50"
+                    }));
+                    
+                    setHabits(transformedHabits);
+                  } else {
+                    setHabits([]);
+                  }
+                } catch (err) {
+                  console.error("Error fetching habits:", err);
+                  setError("Failed to load habits. Please try again.");
+                } finally {
+                  setIsLoading(false);
+                }
+              };
+              fetchHabits();
+            }}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <ScrollView style={styles.content}>
+          {habits.length > 0 ? (
+            habits.map((habbit) => (
+              <HabbitCard key={habbit.id} habbit={habbit} />
+            ))
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No habits found. Create your first habit!</Text>
+            </View>
+          )}
+        </ScrollView>
+      )}
 
-      <TouchableOpacity style={styles.addButton}>
+      <TouchableOpacity 
+        style={styles.addButton}
+        onPress={() => router.push("/habbits/create")}
+      >
         <Text style={styles.addButtonText}>+ Add New Habbit</Text>
       </TouchableOpacity>
     </SafeAreaView>
@@ -81,6 +174,51 @@ const Habbits = () => {
 };
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: "#4CAF50",
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: "#F44336",
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  retryButton: {
+    backgroundColor: "#4CAF50",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+    height: 200,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: "#6B7280",
+    textAlign: "center",
+  },
   container: {
     flex: 1,
     backgroundColor: "#f9f9f9",
@@ -160,7 +298,6 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: "100%",
-    backgroundColor: "#4CAF50",
     borderRadius: 4,
   },
   progressText: {
