@@ -17,7 +17,7 @@ def create_user(
         print(f"🔍 Checking for user: {user_id}, {phone_number}")
 
         # Check if the user already exists
-        response = table.get_item(Key={"user_id": user_id, "phone_number": phone_number})
+        response = table.get_item(Key={"user_id": user_id})
 
         if "Item" in response:
             return {"message": "User already exists", "user": response["Item"]}
@@ -26,7 +26,9 @@ def create_user(
         table.put_item(Item={
             "user_id": user_id,
             "phone_number": phone_number,
-            "created_at": datetime.utcnow().isoformat()
+            "created_at": datetime.utcnow().isoformat(),
+            "habits": [], 
+            "color_preference": "green"
         })
 
         return {"message": "User created successfully", "user_id": user_id}

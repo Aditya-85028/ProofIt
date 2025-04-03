@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useFocusEffect } from "expo-router";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { getCurrentUser } from "aws-amplify/auth";
-import { fetchUserHabits } from "../../utils/api";
+import { fetchUserHabits, deleteUserHabit } from "../../utils/api";
+import SwipeableNavigation from "../../components/SwipeableNavigation";
+import SwipeableHabbitCard from "../../components/SwipeableHabbitCard";
 
 type Habbit = {
   id: string;
@@ -17,159 +20,147 @@ type Habbit = {
 
 
 
-const HabbitCard = ({ habbit }: { habbit: Habbit }) => {
-  // Determine text colors based on background color for better contrast
-  const cardBackgroundColor = habbit.color || "#4CAF50";
-  // Use white text for better contrast on colored backgrounds
-  const textColor = "#FFFFFF";
-  const secondaryTextColor = "rgba(255, 255, 255, 0.8)";
-  
-  return (
-    <View style={[styles.card, { backgroundColor: cardBackgroundColor }]}>
-      <View style={styles.cardHeader}>
-        <Text style={[styles.habbitName, { color: textColor }]}>{habbit.name}</Text>
-        <View style={[styles.streakBadge, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]}>
-          <Ionicons name="flame" size={16} color="#FFFFFF" />
-          <Text style={[styles.streakText, { color: textColor }]}>{habbit.streak}</Text>
-        </View>
-      </View>
-
-      <Text style={[styles.goalText, { color: secondaryTextColor }]}>{habbit.goal}</Text>
-
-      <View style={styles.progressContainer}>
-        <View style={[styles.progressBar, { backgroundColor: 'rgba(255, 255, 255, 0.3)' }]}>
-          <View 
-            style={[
-              styles.progressFill, 
-              { 
-                width: `${habbit.progress * 100}%`,
-                backgroundColor: 'rgba(255, 255, 255, 0.8)' // White with opacity for progress bar
-              }
-            ]} 
-          />
-        </View>
-        <Text style={[styles.progressText, { color: textColor }]}>{Math.round(habbit.progress * 100)}%</Text>
-      </View>
-    </View>
-  );
-};
+// Using the SwipeableHabbitCard component instead of the static HabbitCard
 
 const Habbits = () => {
   const [habits, setHabits] = useState<Habbit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchHabits = async () => {
-      try {
-        // Get the current user's ID
-        const { userId } = await getCurrentUser();
+  const fetchHabits = async () => {
+    try {
+      setIsLoading(true);
+      // Get the current user's ID
+      const { userId } = await getCurrentUser();
+      
+      // Fetch the user's habits
+      const response = await fetchUserHabits(userId);
+      
+      if (response && response.habits) {
+        // Transform the API response to match our Habbit type
+        const transformedHabits = response.habits.map((habit: any) => ({
+          id: habit.habit_id || habit.id || String(Math.random()),
+          name: habit.habit_name || habit.name,
+          streak: habit.streak || 0,
+          goal: habit.goal || `Do ${habit.habit_name} every day`,
+          progress: habit.progress || 0.5,
+          color: habit.color || "#4CAF50"
+        }));
         
-        // Fetch the user's habits
-        const response = await fetchUserHabits(userId);
-        
-        if (response && response.habits) {
-          // Transform the API response to match our Habbit type
-          const transformedHabits = response.habits.map((habit: any) => ({
-            id: habit.habit_id || habit.id || String(Math.random()),
-            name: habit.habit_name || habit.name,
-            streak: habit.streak || 0,
-            goal: habit.goal || `Do ${habit.habit_name} every day`,
-            progress: habit.progress || 0.5,
-            color: habit.color || "#4CAF50"
-          }));
-          
-          setHabits(transformedHabits);
-        } else {
-          setHabits([]);
-        }
-      } catch (err) {
-        console.error("Error fetching habits:", err);
-        setError("Failed to load habits. Please try again.");
-      } finally {
-        setIsLoading(false);
+        setHabits(transformedHabits);
+      } else {
+        setHabits([]);
       }
-    };
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching habits:", err);
+      setError("Failed to load habits. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  // Handle habit deletion
+  const handleDeleteHabit = (habitId: string) => {
+    // Remove the habit from the state
+    setHabits(currentHabits => currentHabits.filter(habit => habit.id !== habitId));
+  };
+
+  // Use both useEffect for initial load and useFocusEffect for when returning to this screen
+  useEffect(() => {
     fetchHabits();
   }, []);
+  
+  // This will run every time the screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      fetchHabits();
+      return () => {};
+    }, [])
+  );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>My Habbits</Text>
-        <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
-          <Ionicons name="close-outline" size={24} color="#333" />
-        </TouchableOpacity>
-      </View>
-
-      {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4CAF50" />
-          <Text style={styles.loadingText}>Loading habits...</Text>
-        </View>
-      ) : error ? (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity 
-            style={styles.retryButton}
-            onPress={() => {
-              setIsLoading(true);
-              setError(null);
-              // Re-fetch habits
-              const fetchHabits = async () => {
-                try {
-                  const { userId } = await getCurrentUser();
-                  const response = await fetchUserHabits(userId);
-                  
-                  if (response && response.habits) {
-                    const transformedHabits = response.habits.map((habit: any) => ({
-                      id: habit.habit_id || habit.id || String(Math.random()),
-                      name: habit.habit_name || habit.name,
-                      streak: habit.streak || 0,
-                      goal: habit.goal || `Do ${habit.habit_name} every day`,
-                      progress: habit.progress || 0.5,
-                      color: habit.color || "#4CAF50"
-                    }));
-                    
-                    setHabits(transformedHabits);
-                  } else {
-                    setHabits([]);
-                  }
-                } catch (err) {
-                  console.error("Error fetching habits:", err);
-                  setError("Failed to load habits. Please try again.");
-                } finally {
-                  setIsLoading(false);
-                }
-              };
-              fetchHabits();
-            }}
-          >
-            <Text style={styles.retryButtonText}>Retry</Text>
+    <SwipeableNavigation>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>My Habbits</Text>
+          <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
+            <Ionicons name="close-outline" size={24} color="#333" />
           </TouchableOpacity>
         </View>
-      ) : (
-        <ScrollView style={styles.content}>
-          {habits.length > 0 ? (
-            habits.map((habbit) => (
-              <HabbitCard key={habbit.id} habbit={habbit} />
-            ))
-          ) : (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No habits found. Create your first habit!</Text>
-            </View>
-          )}
-        </ScrollView>
-      )}
 
-      <TouchableOpacity 
-        style={styles.addButton}
-        onPress={() => router.push("/habbits/create")}
-      >
-        <Text style={styles.addButtonText}>+ Add New Habbit</Text>
-      </TouchableOpacity>
-    </SafeAreaView>
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#4CAF50" />
+            <Text style={styles.loadingText}>Loading habits...</Text>
+          </View>
+        ) : error ? (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity 
+              style={styles.retryButton}
+              onPress={() => {
+                setIsLoading(true);
+                setError(null);
+                // Re-fetch habits
+                const fetchHabits = async () => {
+                  try {
+                    const { userId } = await getCurrentUser();
+                    const response = await fetchUserHabits(userId);
+                    
+                    if (response && response.habits) {
+                      const transformedHabits = response.habits.map((habit: any) => ({
+                        id: habit.habit_id || habit.id || String(Math.random()),
+                        name: habit.habit_name || habit.name,
+                        streak: habit.streak || 0,
+                        goal: habit.goal || `Do ${habit.habit_name} every day`,
+                        progress: habit.progress || 0.5,
+                        color: habit.color || "#4CAF50"
+                      }));
+                      
+                      setHabits(transformedHabits);
+                    } else {
+                      setHabits([]);
+                    }
+                  } catch (err) {
+                    console.error("Error fetching habits:", err);
+                    setError("Failed to load habits. Please try again.");
+                  } finally {
+                    setIsLoading(false);
+                  }
+                };
+                fetchHabits();
+              }}
+            >
+              <Text style={styles.retryButtonText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <ScrollView style={styles.content}>
+            {habits.length > 0 ? (
+              habits.map((habbit) => (
+                <SwipeableHabbitCard 
+                  key={habbit.id} 
+                  habbit={habbit} 
+                  onDelete={handleDeleteHabit}
+                />
+              ))
+            ) : (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No habits found. Create your first habit!</Text>
+              </View>
+            )}
+          </ScrollView>
+        )}
+
+        <TouchableOpacity 
+          style={styles.addButton}
+          onPress={() => router.push("/habbits/create")}
+        >
+          <Text style={styles.addButtonText}>+ Add New Habbit</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    </SwipeableNavigation>
   );
 };
 

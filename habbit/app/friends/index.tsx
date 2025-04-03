@@ -3,6 +3,7 @@ import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity } from "react
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import SwipeableNavigation from "../../components/SwipeableNavigation";
 
 type Friend = {
   id: string;
@@ -47,25 +48,27 @@ export default function FriendsScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Friends</Text>
-        <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
-          <Ionicons name="close-outline" size={24} />
+    <SwipeableNavigation>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Friends</Text>
+          <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
+            <Ionicons name="close-outline" size={24} />
+          </TouchableOpacity>
+        </View>
+
+        <FlatList
+          data={mockFriends}
+          renderItem={renderFriend}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContainer}
+        />
+
+        <TouchableOpacity style={styles.addButton}>
+          <Text style={styles.addButtonText}>Find Your Friends on Habbit!</Text>
         </TouchableOpacity>
-      </View>
-
-      <FlatList
-        data={mockFriends}
-        renderItem={renderFriend}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
-      />
-
-      <TouchableOpacity style={styles.addButton}>
-        <Text style={styles.addButtonText}>Find Your Friends on Habbit!</Text>
-      </TouchableOpacity>
-    </SafeAreaView>
+      </SafeAreaView>
+    </SwipeableNavigation>
   );
 }
 

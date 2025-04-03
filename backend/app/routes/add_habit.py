@@ -41,18 +41,18 @@ def add_habit(
             "streak": 0,  # Initial streak count
             "created_at": created_at
         })
-        
         # Update the user's habits list in the user table
         try:
             # Use update_item with list_append to add the habit_id to the user's habits list
+            print("Fetched user before update:")
             user_table.update_item(
                 Key={"user_id": user_id},
-                UpdateExpression="SET habits = list_append(if_not_exists(habits, :empty_list), :habit_id)",
+                UpdateExpression="SET habits = list_append(habits, :habit_id)",
                 ExpressionAttributeValues={
-                    ":habit_id": [habit_id],
-                    ":empty_list": []
+                    ":habit_id": [habit_id]
                 }
             )
+            print("BOOOPP")
         except Exception as e:
             print(f"⚠️ Warning: Could not update user's habits list: {e}")
             # Continue execution even if this update fails

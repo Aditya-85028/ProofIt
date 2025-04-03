@@ -12,6 +12,7 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import SwipeableNavigation from "../components/SwipeableNavigation";
 
 type Post = {
   id: string;
@@ -109,48 +110,50 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
+    <SwipeableNavigation>
+      <SafeAreaView style={styles.container}>
+        <StatusBar style="dark" />
 
-      {/* Top Bar */}
-      <View style={styles.topBar}>
-        <TouchableOpacity style={styles.iconButton} onPress={() => router.push("/settings")}>
-          <Ionicons name="cog-outline" size={32} color="#333" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Habbit</Text>
-        <TouchableOpacity style={styles.iconButton} onPress={() => router.push("/profile/1")}>
-          <Ionicons name="person-circle-outline" size={32} color="#333" />
-        </TouchableOpacity>
-      </View>
+        {/* Top Bar */}
+        <View style={styles.topBar}>
+          <TouchableOpacity style={styles.iconButton} onPress={() => router.push("/settings")}>
+            <Ionicons name="cog-outline" size={32} color="#333" />
+          </TouchableOpacity>
+          <Text style={styles.title}>Habbit</Text>
+          <TouchableOpacity style={styles.iconButton} onPress={() => router.push("/profile/1")}>
+            <Ionicons name="person-circle-outline" size={32} color="#333" />
+          </TouchableOpacity>
+        </View>
 
-      <FlatList
-        data={mockPosts}
-        renderItem={renderPost}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ padding: 16 }}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#4CAF50"]} />
-        }
-      />
+        <FlatList
+          data={mockPosts}
+          renderItem={renderPost}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={{ padding: 16 }}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#4CAF50"]} />
+          }
+        />
 
-      {/* Bottom Navigation Bar */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.bottomNavItem} onPress={() => router.push("/friends")}>
-          <Ionicons name="people-outline" size={24} color="#333" />
-          <Text style={styles.bottomNavText}>Friends</Text>
-        </TouchableOpacity>
+        {/* Bottom Navigation Bar */}
+        <View style={styles.bottomNav}>
+          <TouchableOpacity style={styles.bottomNavItem} onPress={() => router.push("/friends")}>
+            <Ionicons name="people-outline" size={24} color="#333" />
+            <Text style={styles.bottomNavText}>Friends</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.cameraIcon} onPress={() => router.push("/camera")}>
-          <Ionicons name="camera-outline" size={36} color="#333" />
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.cameraIcon} onPress={() => router.push("/camera")}>
+            <Ionicons name="camera-outline" size={36} color="#333" />
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.bottomNavItem} onPress={() => router.push("/habbits")}>
-          <Ionicons name="list-outline" size={24} color="#333" />
-          <Text style={styles.bottomNavText}>Habbits</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+          <TouchableOpacity style={styles.bottomNavItem} onPress={() => router.push("/habbits")}>
+            <Ionicons name="list-outline" size={24} color="#333" />
+            <Text style={styles.bottomNavText}>Habbits</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </SwipeableNavigation>
   );
 }
 
