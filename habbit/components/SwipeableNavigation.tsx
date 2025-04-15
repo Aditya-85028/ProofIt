@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -9,11 +9,15 @@ import Animated, {
   runOnJS,
   useAnimatedStyle,
   interpolate,
-  Extrapolate
+  Extrapolate,
+  useDerivedValue
 } from 'react-native-reanimated';
 
-
 const { width } = Dimensions.get('window');
+const SCREEN_EDGE_THRESHOLD = width * 0.15; // 15% of screen width visible from adjacent screens
+const SWIPE_THRESHOLD = width / 3; // How far to swipe before triggering navigation
+const RESISTANCE_FACTOR = 2.5; // Higher value = more resistance at edges
+const SCALE_FACTOR = 0.92; // Scale factor for adjacent screens
 
 interface SwipeableNavigationProps {
   children: React.ReactNode;
@@ -25,8 +29,7 @@ const SwipeableNavigation: React.FC<SwipeableNavigationProps> = ({ children }) =
   const translateX = useSharedValue(0);
   const startX = useRef(0);
   const isNavigating = useSharedValue(false);
-  const targetScreen = useRef(-1);
-
+  
   // Define the screens in the swipe order
   const screens = [
     '/friends',
@@ -36,17 +39,29 @@ const SwipeableNavigation: React.FC<SwipeableNavigationProps> = ({ children }) =
 
   // Get the current screen index
   const getCurrentIndex = () => {
-    'worklet';
     return screens.findIndex(screen => pathname === screen || pathname.startsWith(screen));
   };
 
+  const currentIndex = useRef(getCurrentIndex());
+  
+  // Update current index when pathname changes
+  useEffect(() => {
+    currentIndex.current = getCurrentIndex();
+    // Reset translation when navigation is complete
+    if (isNavigating.value) {
+      setTimeout(() => {
+        translateX.value = withTiming(0, { duration: 0 });
+        isNavigating.value = false;
+      }, 50);
+    }
+  }, [pathname]);
+
   const navigateToScreen = (index: number) => {
+    'worklet';
     if (index >= 0 && index < screens.length && !isNavigating.value) {
-      const currentIndex = getCurrentIndex();
-      const direction = index > currentIndex ? -1 : 1; // -1 for left, 1 for right
+      const direction = index > currentIndex.current ? -1 : 1; // -1 for left, 1 for right
       
-      // Set the target screen and mark that we're navigating
-      targetScreen.current = index;
+      // Mark that we're navigating
       isNavigating.value = true;
       
       // Animate to the edge of the screen
@@ -54,28 +69,20 @@ const SwipeableNavigation: React.FC<SwipeableNavigationProps> = ({ children }) =
         { duration: 250 }, 
         () => {
           // After animation completes, navigate to the new screen
-          runOnJS(performNavigation)(screens[index]);
+          runOnJS(router.push)(screens[index]);
         }
       );
     }
   };
-  
-  const performNavigation = (screenPath: string) => {
-    router.push(screenPath);
-  };
-  
-  // Reset animation when navigation is complete
-  useEffect(() => {
-    if (isNavigating.value) {
-      // Small delay to ensure the new screen has loaded
-      const timer = setTimeout(() => {
-        translateX.value = withTiming(0, { duration: 0 });
-        isNavigating.value = false;
-      }, 50);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [pathname]);
+
+  // Calculate the position of adjacent screens
+  const leftScreenX = useDerivedValue(() => {
+    return translateX.value - width + SCREEN_EDGE_THRESHOLD;
+  });
+
+  const rightScreenX = useDerivedValue(() => {
+    return translateX.value + width - SCREEN_EDGE_THRESHOLD;
+  });
 
   const panGesture = Gesture.Pan()
     .onStart(() => {
@@ -86,32 +93,38 @@ const SwipeableNavigation: React.FC<SwipeableNavigationProps> = ({ children }) =
     .onUpdate((event) => {
       if (isNavigating.value) return;
       
-      // Limit the drag to prevent excessive movement
-      const currentIndex = getCurrentIndex();
-
-      const minTranslate = currentIndex === 0 ? 0 : -width;
-      const maxTranslate = currentIndex === screens.length - 1 ? 0 : width;
+      // Get current index for boundary checks
+      const idx = currentIndex.current;
       
-      const newTranslateX = startX.current + event.translationX;
-      translateX.value = Math.max(minTranslate, Math.min(maxTranslate, newTranslateX));
+      // Apply resistance at the edges
+      let newTranslateX = startX.current + event.translationX;
+      
+      // Apply resistance when at the first or last screen
+      if ((idx === 0 && newTranslateX > 0) || 
+          (idx === screens.length - 1 && newTranslateX < 0)) {
+        // Apply resistance - divide by RESISTANCE_FACTOR for stronger resistance
+        newTranslateX = startX.current + event.translationX / RESISTANCE_FACTOR;
+      }
+      
+      translateX.value = newTranslateX;
     })
     .onEnd((event) => {
       if (isNavigating.value) return;
       
-      const currentIndex = getCurrentIndex();
+      const idx = currentIndex.current;
       
-      // Determine if we should navigate based on the velocity and distance
-      if (Math.abs(event.velocityX) > 500 || Math.abs(translateX.value) > width / 3) {
-        if (event.velocityX > 0 || translateX.value > width / 3) {
+      // Determine if we should navigate based on velocity and distance
+      if (Math.abs(event.velocityX) > 500 || Math.abs(translateX.value) > SWIPE_THRESHOLD) {
+        if (event.velocityX > 0 || translateX.value > SWIPE_THRESHOLD) {
           // Swipe right - go to previous screen
-          if (currentIndex > 0) {
-            runOnJS(navigateToScreen)(currentIndex - 1);
+          if (idx > 0) {
+            navigateToScreen(idx - 1);
             return;
           }
-        } else if (event.velocityX < 0 || translateX.value < -width / 3) {
+        } else if (event.velocityX < 0 || translateX.value < -SWIPE_THRESHOLD) {
           // Swipe left - go to next screen
-          if (currentIndex < screens.length - 1) {
-            runOnJS(navigateToScreen)(currentIndex + 1);
+          if (idx < screens.length - 1) {
+            navigateToScreen(idx + 1);
             return;
           }
         }
@@ -121,21 +134,13 @@ const SwipeableNavigation: React.FC<SwipeableNavigationProps> = ({ children }) =
       translateX.value = withSpring(0, { damping: 15 });
     });
 
-  // Create animated styles for the container
-  const animatedStyles = useAnimatedStyle(() => {
-    // Calculate opacity based on translation
-    const opacity = interpolate(
-      Math.abs(translateX.value),
-      [0, width * 0.8],
-      [1, 0.7],
-      Extrapolate.CLAMP
-    );
-    
+  // Create animated styles for the main container
+  const mainScreenStyle = useAnimatedStyle(() => {
     // Calculate scale based on translation
     const scale = interpolate(
       Math.abs(translateX.value),
       [0, width],
-      [1, 0.95],
+      [1, 0.98],
       Extrapolate.CLAMP
     );
     
@@ -144,22 +149,146 @@ const SwipeableNavigation: React.FC<SwipeableNavigationProps> = ({ children }) =
         { translateX: translateX.value },
         { scale }
       ],
-      opacity
+      zIndex: 2, // Main screen is on top
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: interpolate(
+        Math.abs(translateX.value),
+        [0, width / 4],
+        [0, 0.1],
+        Extrapolate.CLAMP
+      ),
+      shadowRadius: 10,
+      elevation: 5,
+    };
+  });
+
+  // Style for the left adjacent screen
+  const leftScreenStyle = useAnimatedStyle(() => {
+    // Only show left screen if we're not at the first screen
+    const opacity = currentIndex.current > 0 ? 
+      interpolate(
+        translateX.value,
+        [0, width / 2],
+        [0, 1],
+        Extrapolate.CLAMP
+      ) : 0;
+    
+    // Scale effect for adjacent screen
+    const scale = SCALE_FACTOR;
+
+    return {
+      transform: [
+        { translateX: leftScreenX.value },
+        { scale }
+      ],
+      opacity,
+      zIndex: 1,
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: '#f9f9f9', // Match your app background
+      borderRadius: 10 * opacity, // Subtle rounded corners when visible
+    };
+  });
+
+  // Style for the right adjacent screen
+  const rightScreenStyle = useAnimatedStyle(() => {
+    // Only show right screen if we're not at the last screen
+    const opacity = currentIndex.current < screens.length - 1 ? 
+      interpolate(
+        translateX.value,
+        [-width / 2, 0],
+        [1, 0],
+        Extrapolate.CLAMP
+      ) : 0;
+    
+    // Scale effect for adjacent screen
+    const scale = SCALE_FACTOR;
+
+    return {
+      transform: [
+        { translateX: rightScreenX.value },
+        { scale }
+      ],
+      opacity,
+      zIndex: 1,
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: '#f9f9f9', // Match your app background
+      borderRadius: 10 * opacity, // Subtle rounded corners when visible
     };
   });
 
   return (
-    <GestureDetector gesture={panGesture}>
-      <Animated.View style={[styles.container, animatedStyles]}>
-        {children}
+    <View style={styles.container}>
+      {/* Left adjacent screen (previous) */}
+      <Animated.View style={leftScreenStyle}>
+        {currentIndex.current > 0 && (
+          <View style={styles.adjacentScreenIndicator}>
+            <View style={styles.screenEdge} />
+          </View>
+        )}
       </Animated.View>
-    </GestureDetector>
+      
+      {/* Right adjacent screen (next) */}
+      <Animated.View style={rightScreenStyle}>
+        {currentIndex.current < screens.length - 1 && (
+          <View style={[styles.adjacentScreenIndicator, styles.rightIndicator]}>
+            <View style={styles.screenEdge} />
+          </View>
+        )}
+      </Animated.View>
+      
+      {/* Main screen with gesture detector */}
+      <GestureDetector gesture={panGesture}>
+        <Animated.View style={[styles.mainScreen, mainScreenStyle]}>
+          {children}
+        </Animated.View>
+      </GestureDetector>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    position: 'relative',
+    backgroundColor: '#f9f9f9', // Match your app background
+  },
+  mainScreen: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  adjacentScreenIndicator: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: SCREEN_EDGE_THRESHOLD,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  rightIndicator: {
+    left: 'auto',
+    right: 0,
+  },
+  screenEdge: {
+    width: 4,
+    height: 40,
+    backgroundColor: 'rgba(76, 175, 80, 0.5)', // Semi-transparent green
+    borderRadius: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 2,
   },
 });
 

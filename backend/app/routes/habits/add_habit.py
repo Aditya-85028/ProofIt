@@ -35,8 +35,7 @@ def add_habit(
             "habit_name": habit_name,
             "color": color,
             "cadence": cadence,
-            "completed_dates": [],  # Empty list for completed dates
-            "posts": [],  # Empty list for post objects
+            "completed_dates": {},  # Empty list for completed dates
             "reminder": True,  # Default reminder setting
             "streak": 0,  # Initial streak count
             "created_at": created_at
@@ -50,28 +49,23 @@ def add_habit(
                 UpdateExpression="SET habits = list_append(habits, :habit_id)",
                 ExpressionAttributeValues={
                     ":habit_id": [habit_id]
-                }
+                },
+                ReturnValues="UPDATED_NEW"
             )
-            print("BOOOPP")
+            print(f"✅ Added habit_id {habit_id} to user's habits list")
         except Exception as e:
-            print(f"⚠️ Warning: Could not update user's habits list: {e}")
-            # Continue execution even if this update fails
-            # The habit is already saved in the habit table
+            print(f"❌ Error updating user's habits list: {e}")
+            # If updating the user table fails, we should still return success for the habit creation
+            # but log the error for debugging
+            pass
         
         return {
             "message": "Habit added successfully",
-            "habit": {
-                "user_id": user_id,
-                "habit_id": habit_id,
-                "habit_name": habit_name,
-                "color": color,
-                "cadence": cadence,
-                "completed_dates": [],
-                "posts": [],
-                "reminder": False,
-                "streak": 0,
-                "created_at": created_at
-            }
+            "habit_id": habit_id,
+            "habit_name": habit_name,
+            "color": color,
+            "cadence": cadence,
+            "created_at": created_at
         }
         
     except Exception as e:

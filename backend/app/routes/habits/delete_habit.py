@@ -60,18 +60,17 @@ def delete_habit(
                             ":habits": user_habits
                         }
                     )
+                    print(f"✅ Removed habit_id {habit_id} from user's habits list")
+                else:
+                    print(f"⚠️ Warning: Habit ID {habit_id} not found in user's habits list")
         except Exception as e:
-            print(f"⚠️ Warning: Could not update user's habits list: {e}")
-            # Continue execution even if this update fails
-            # The habit is already deleted from the habit table
+            print(f"❌ Error updating user's habits list: {e}")
+            # If updating the user table fails, we should still return success for the habit deletion
+            # but log the error for debugging
+            pass
         
-        return {
-            "message": "Habit deleted successfully",
-            "habit_id": habit_id
-        }
+        return {"message": "Habit deleted successfully"}
         
-    except HTTPException as he:
-        raise he
     except Exception as e:
         print(f"❌ DynamoDB error: {e}")
         raise HTTPException(status_code=500, detail=f"Error deleting habit: {str(e)}")

@@ -95,20 +95,19 @@ const HabitDetail = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/habbits')}>
-          <Ionicons name="arrow-back" size={24} color="#333" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Habit Details</Text>
-        <TouchableOpacity 
-          style={styles.editButton} 
-          onPress={() => router.push(`/habbits/edit/${habit.id}`)}
-        >
-          <Ionicons name="pencil" size={24} color="#4CAF50" />
-        </TouchableOpacity>
-      </View>
 
       <ScrollView style={styles.content}>
+        <View style={styles.navigationControls}>
+          <TouchableOpacity style={styles.iconButton} onPress={() => router.replace('/habbits')}>
+            <Ionicons name="arrow-back" size={24} color="#333" />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.iconButton} 
+            onPress={() => router.push(`/habbits/edit/${habit.id}`)}
+          >
+            <Ionicons name="pencil" size={24} color="#4CAF50" />
+          </TouchableOpacity>
+        </View>
         <View style={[styles.card, { backgroundColor: habit.color }]}>
           <View style={styles.cardHeader}>
             <Text style={styles.habitName}>{habit.name}</Text>
@@ -188,24 +187,17 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 16,
   },
-  header: {
+  navigationControls: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e5e5",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
-  backButton: {
+  iconButton: {
     padding: 8,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#4CAF50",
-  },
-  editButton: {
-    padding: 8,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
   },
   content: {
     flex: 1,

@@ -48,25 +48,23 @@ async def update_habit(
             UpdateExpression="set habit_name = :name, cadence = :cadence, color = :color, updated_at = :updated_at",
             ExpressionAttributeValues={
                 ':name': habit_name,
-                ':cadence': cadence,
+                ':cadence': cadence_int,
                 ':color': color,
-                ':updated_at': datetime.now().isoformat()
+                ':updated_at': datetime.utcnow().isoformat()
             },
             ReturnValues="UPDATED_NEW"
         )
         
         return {
-            "status": "success",
             "message": "Habit updated successfully",
-            "updated_habit": {
-                "habit_id": habit_id,
+            "habit_id": habit_id,
+            "updates": {
                 "habit_name": habit_name,
-                "cadence": cadence,
+                "cadence": cadence_int,
                 "color": color
             }
         }
         
     except Exception as e:
-        # Log the error for debugging
-        print(f"Error updating habit: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to update habit: {str(e)}")
+        print(f"❌ Error updating habit: {e}")
+        raise HTTPException(status_code=500, detail=f"Error updating habit: {str(e)}")

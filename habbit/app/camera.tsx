@@ -50,7 +50,11 @@ export default function CameraScreen() {
     if (cameraRef.current) {
       const photo = await cameraRef.current.takePictureAsync();
       console.log(photo?.uri);
-      router.back();
+      // Navigate to post creation screen with the photo URI
+      router.push({
+        pathname: "/post/create",
+        params: { photoUri: photo.uri }
+      });
     }
   };
 

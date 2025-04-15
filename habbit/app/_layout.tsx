@@ -16,6 +16,10 @@ export default function Layout() {
         <Stack.Screen name="camera" options={{ headerShown: false }} />
         <Stack.Screen name="habbits/index" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" options={{ headerShown: false }} />
+        <Stack.Screen name="habbits/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="habbits/create" options={{ headerShown: false }} />
+        <Stack.Screen name="habbits/edit/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="post" options={{ headerShown: false }} />
       </Stack>
     </GestureHandlerRootView>
   );

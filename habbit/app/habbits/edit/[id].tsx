@@ -7,6 +7,7 @@ import { getCurrentUser } from "aws-amplify/auth";
 import { fetchUserHabits, updateUserHabit } from "../../../utils/api";
 
 // Predefined color options for habits (same as in create.tsx)
+//TODO THE BACK BUTTON IS NOT SENDING TO HOME PAGE PROPERLY FIX!!!!!
 const COLORS = [
   { id: 1, value: "#4CAF50", name: "Green" },
   { id: 2, value: "#2196F3", name: "Blue" },

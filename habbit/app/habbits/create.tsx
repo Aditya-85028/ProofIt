@@ -65,11 +65,17 @@ const CreateHabbit = () => {
       // API endpoint URL from the project
       const apiUrl = "https://y8lbtj64c9.execute-api.us-east-1.amazonaws.com/prod/add_habit";
       
+      // Convert cadence to a number and validate it
+      const cadenceNumber = parseInt(cadence);
+      if (isNaN(cadenceNumber) || cadenceNumber < 1 || cadenceNumber > 7) {
+        throw new Error("Cadence must be a number between 1 and 7");
+      }
+      
       // Build query parameters
       const queryParams = new URLSearchParams({
         user_id: userId,
         habit_name: habitName.trim(),
-        cadence: cadence,
+        cadence: cadenceNumber.toString(), // Convert the number to string for URL params
         color: selectedColor
       }).toString();
       
@@ -83,7 +89,7 @@ const CreateHabbit = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || "Failed to create habit");
+        throw new Error(data.detail || data.message || "Failed to create habit");
       }
 
       Alert.alert("Success", "Habit created successfully!", [
@@ -91,7 +97,10 @@ const CreateHabbit = () => {
       ]);
     } catch (error) {
       console.error("Error creating habit:", error);
-      Alert.alert("Error", `Failed to create habit: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      Alert.alert("Error", `Failed to create habit: ${errorMessage}`);
+      // Also log the full error for debugging
+      console.log("Full error object:", error);
     } finally {
       setIsLoading(false);
     }
