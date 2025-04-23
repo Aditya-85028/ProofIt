@@ -1,12 +1,13 @@
+// app/index.tsx
 import React from "react";
 import { StyleSheet, Pressable, View, Text } from "react-native";
 import { useRouter } from "expo-router";
 
-const Welcome = () => {
+export default function Index() {
   const router = useRouter();
 
   const handleContinue = () => {
-    router.replace("/login"); //
+    router.replace("/login");
   };
 
   return (
@@ -18,7 +19,7 @@ const Welcome = () => {
       </Pressable>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -37,7 +38,7 @@ const styles = StyleSheet.create({
   button: {
     padding: 15,
     borderRadius: 8,
-    backgroundColor: "#007AFF", // You might want to use your theme colors here
+    backgroundColor: "#007AFF",
   },
   buttonText: {
     color: "#FFFFFF",
@@ -45,5 +46,3 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
-
-export default Welcome;

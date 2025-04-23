@@ -28,6 +28,7 @@ yarn-error.*
 # macOS
 .DS_Store
 *.pem
+habbit/ios
 
 # local env files
 .env*.local
@@ -37,6 +38,7 @@ yarn-error.*
 
 
 # amplify
+habbit/amplify
 node_modules
 .amplify
 amplify_outputs*

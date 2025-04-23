@@ -1,91 +1,107 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from "react-native";
+import { Amplify } from "aws-amplify";
+import outputs from "../amplify_outputs.json";
 import { useRouter } from "expo-router";
-import { sendOTP, confirmOTP } from "../utils/auth";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import {
+  Authenticator,
+  useAuthenticator,
+} from "@aws-amplify/ui-react-native";
+import { useEffect } from "react";
+import { getCurrentUser, fetchUserAttributes} from "aws-amplify/auth";
+import { View, ActivityIndicator, Alert } from "react-native";
 
-const LoginScreen = () => {
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [code, setCode] = useState("");
-  const [step, setStep] = useState<"enterPhone" | "enterOTP">("enterPhone");
-  const [session, setSession] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+Amplify.configure(outputs);
+
+function AuthGate() {
+  const { authStatus } = useAuthenticator();
   const router = useRouter();
 
-  const handleSendOTP = async () => {
-    if (!phoneNumber) {
-      Alert.alert("Error", "Please enter a phone number");
-      return;
-    }
-    setLoading(true);
-    try {
-      const response = await sendOTP(phoneNumber);
-      setSession(response); // Save session for OTP verification
-      setStep("enterOTP");
-      Alert.alert("Success", "OTP sent to your phone!");
-    } catch (error) {
-      Alert.alert("Error", "ERROR SENDING OTP");
-    }
-    setLoading(false);
-  };
+  useEffect(() => {
+    const handleAuth = async () => {
+      if (authStatus === "authenticated") {
+        try {
+          const { username, userId } = await getCurrentUser();
+          const attributes = await fetchUserAttributes();
+          const email = attributes?.email;
 
-  const handleVerifyOTP = async () => {
-    if (!code) {
-      Alert.alert("Error", "Please enter the OTP");
-      return;
-    }
-    setLoading(true);
-    try {
-      await confirmOTP(session, code);
-      Alert.alert("Success", "Logged in successfully!");
-      router.push("/home"); // Navigate to the home screen
-    } catch (error) {
-      Alert.alert("Error", "ERROR VERIFYING OTP");
-    }
-    setLoading(false);
-  };
+          if (!userId || !email) {
+            console.warn("❌ Missing userId or email — skipping createUser call");
+            return;
+          }
+          console.log("✅ Username:", username);
+          console.log("🆔 User ID:", userId);
+          console.log("📧 Email:", email);
 
+          try {
+            // First, try to check if user exists
+            const checkUserResponse = await fetch(
+              `https://y8lbtj64c9.execute-api.us-east-1.amazonaws.com/prod/get_user?user_id=${encodeURIComponent(userId)}`
+            );
+            const userData = await checkUserResponse.json();
+
+            // If we get a 404 or an error, the user doesn't exist
+            if (checkUserResponse.status === 404 || userData.detail) {
+              console.log("🆕 User not found, creating new user");
+              // Create new user
+              const createUserResponse = await fetch(
+                `https://y8lbtj64c9.execute-api.us-east-1.amazonaws.com/prod/create_user?user_id=${encodeURIComponent(userId)}&phone_number=${encodeURIComponent(email)}`,
+                {
+                  method: "POST",
+                }
+              );
+              const result = await createUserResponse.json();
+              console.log("🗃️ User creation response:", result);
+              
+              if (!createUserResponse.ok) {
+                throw new Error(`Failed to create user: ${result.detail || 'Unknown error'}`);
+              }
+            } else {
+              // User exists
+              console.log("✅ User exists:", userData);
+            }
+
+            // Navigate to home regardless of whether we created or found the user
+            router.push("/home");
+
+          } catch (error) {
+            console.error("❌ Error in user management:", error);
+            Alert.alert(
+              "Error",
+              "There was a problem setting up your account. Please try again."
+            );
+          }
+        } catch (error) {
+          console.error("❌ Error fetching user attributes:", error);
+          Alert.alert(
+            "Error",
+            "Failed to get user information. Please try again."
+          );
+        }
+      }
+    };
+
+    handleAuth();
+  }, [authStatus]);
+
+  if (authStatus === "configuring") {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  return null;
+}
+
+export default function Login() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{step === "enterPhone" ? "Enter Phone Number" : "Enter OTP"}</Text>
-
-      {step === "enterPhone" ? (
-        <>
-          <TextInput
-            style={styles.input}
-            placeholder="Phone Number (e.g., +1234567890)"
-            keyboardType="phone-pad"
-            autoCapitalize="none"
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
-          />
-          <TouchableOpacity style={styles.button} onPress={handleSendOTP} disabled={loading}>
-            <Text style={styles.buttonText}>{loading ? "Sending OTP..." : "Send OTP"}</Text>
-          </TouchableOpacity>
-        </>
-      ) : (
-        <>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter OTP"
-            keyboardType="numeric"
-            value={code}
-            onChangeText={setCode}
-          />
-          <TouchableOpacity style={styles.button} onPress={handleVerifyOTP} disabled={loading}>
-            <Text style={styles.buttonText}>{loading ? "Verifying..." : "Verify OTP"}</Text>
-          </TouchableOpacity>
-        </>
-      )}
-    </View>
+    <SafeAreaProvider>
+      <Authenticator.Provider>
+        <Authenticator>
+          <AuthGate />
+        </Authenticator>
+      </Authenticator.Provider>
+    </SafeAreaProvider>
   );
-};
-
-const styles = StyleSheet.create({
-  container: { backgroundColor: "#FFFFFF", flex: 1, justifyContent: "center", padding: 20 },
-  title: { fontSize: 24, fontWeight: "bold", textAlign: "center", marginBottom: 20 },
-  input: { borderWidth: 1, borderColor: "#ccc", padding: 10, borderRadius: 5, marginBottom: 10 },
-  button: { backgroundColor: "#007bff", padding: 15, borderRadius: 5, alignItems: "center" },
-  buttonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
-});
-
-export default LoginScreen;
+}
