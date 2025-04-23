@@ -38,8 +38,13 @@ def add_habit(
             "completed_dates": {},  # Empty list for completed dates
             "reminder": True,  # Default reminder setting
             "streak": 0,  # Initial streak count
-            "created_at": created_at
+            "created_at": created_at,
+            "last_week_posts": 0,  # Track posts from last week
+            "last_week_updated": created_at,  # When the last week was updated
+            
+            "is_in_grace_period": True  # New habits start in grace period
         })
+        
         # Update the user's habits list in the user table
         try:
             # Use update_item with list_append to add the habit_id to the user's habits list

@@ -4,6 +4,7 @@ import boto3
 from boto3.dynamodb.conditions import Key
 import os
 import uuid
+from app.utils.streak_manager import increment_habit_streak
 from datetime import datetime, timezone
 import re  # ✅ Added for filename sanitization
 
@@ -71,6 +72,9 @@ async def create_post(
         
         # Save post to DynamoDB
         posts_table.put_item(Item=post_item)
+        
+        # Update the habit streak
+        increment_habit_streak(user_id, habit_id)
         
         return {
             "message": "Post created successfully",
