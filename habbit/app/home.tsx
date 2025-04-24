@@ -15,20 +15,29 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
 import { getCurrentUser } from "aws-amplify/auth";
-import { fetchUserPosts, fetchUserHabits, deletePost, createComment, getComments, likePost, getPostLikes, checkUserLike } from "../utils/api";
+import {
+  fetchUserPosts,
+  fetchUserHabits,
+  deletePost,
+  createComment,
+  getComments,
+  likePost,
+  getPostLikes,
+  checkUserLike,
+} from "../utils/api";
 import SwipeableNavigation from "../components/SwipeableNavigation";
 import PostModal from "../components/PostModal";
-import Comments from '../components/Comments';
-import { PostComment } from '../components/Comments';
+import Comments from "../components/Comments";
+import { PostComment } from "../components/Comments";
 
 // Helper function to format timestamp
 const formatTimestamp = (timestamp: string | number) => {
   const date = new Date(timestamp);
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-  
+
   if (diffInSeconds < 60) {
-    return 'Just now';
+    return "Just now";
   } else if (diffInSeconds < 3600) {
     const minutes = Math.floor(diffInSeconds / 60);
     return `${minutes}m ago`;
@@ -39,10 +48,10 @@ const formatTimestamp = (timestamp: string | number) => {
     const days = Math.floor(diffInSeconds / 86400);
     return `${days}d ago`;
   } else {
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric',
-      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
     });
   }
 };
@@ -81,7 +90,7 @@ export default function HomeScreen() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [habits, setHabits] = useState<{[key: string]: any}>({});
+  const [habits, setHabits] = useState<{ [key: string]: any }>({});
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [userCache, setUserCache] = useState<CachedUserData>({});
@@ -93,7 +102,7 @@ export default function HomeScreen() {
   };
 
   // Move getUserData outside of fetchData
-  const getUserData = async (userId: string): Promise<Omit<UserData, 'timestamp'>> => {
+  const getUserData = async (userId: string): Promise<Omit<UserData, "timestamp">> => {
     // Check cache first
     const cachedData = userCache[userId];
     if (cachedData && !isCacheExpired(cachedData.timestamp)) {
@@ -107,31 +116,31 @@ export default function HomeScreen() {
         `https://y8lbtj64c9.execute-api.us-east-1.amazonaws.com/prod/get_user?user_id=${encodeURIComponent(userId)}`
       );
       const userData = await userResponse.json();
-      
+
       if (userData && !userData.error) {
         // Cache the user data with timestamp
         const newUserData = {
-          display_name: userData.display_name || 'Unknown User',
+          display_name: userData.display_name || "Unknown User",
           profile_picture: userData.profile_picture,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         };
-        
-        setUserCache(prev => ({
+
+        setUserCache((prev) => ({
           ...prev,
-          [userId]: newUserData
+          [userId]: newUserData,
         }));
-        
+
         // Return data without the timestamp
         const { timestamp, ...returnData } = newUserData;
         return returnData;
       }
     } catch (error) {
-      console.error('Error fetching user info:', error);
+      console.error("Error fetching user info:", error);
     }
-    
+
     return {
-      display_name: 'Unknown User',
-      profile_picture: undefined
+      display_name: "Unknown User",
+      profile_picture: undefined,
     };
   };
 
@@ -142,12 +151,12 @@ export default function HomeScreen() {
       // Get current user
       const { userId } = await getCurrentUser();
       setCurrentUserId(userId);
-      
+
       // Fetch habits first to get habit names
       const habitsResponse = await fetchUserHabits(userId);
-      
+
       // Create a map of habit IDs to habit objects for easy lookup
-      const habitsMap: {[key: string]: any} = {};
+      const habitsMap: { [key: string]: any } = {};
       if (habitsResponse && habitsResponse.habits) {
         habitsResponse.habits.forEach((habit: any) => {
           const habitId = habit.habit_id || habit.id;
@@ -155,10 +164,10 @@ export default function HomeScreen() {
         });
       }
       setHabits(habitsMap);
-      
+
       // Fetch posts
       const postsResponse = await fetchUserPosts(userId);
-      
+
       if (postsResponse && postsResponse.posts) {
         // Transform API response to match our Post type
         const transformedPosts = await Promise.all(
@@ -166,11 +175,11 @@ export default function HomeScreen() {
             // Get likes information with error handling
             let likesCount = 0;
             let isLiked = false;
-            
+
             try {
               const likesResponse = await getPostLikes(post.post_id);
               const userLikeResponse = await checkUserLike(post.post_id, userId);
-              
+
               // Safely access likes array with fallback to empty array
               likesCount = (likesResponse?.likes || []).length;
               isLiked = userLikeResponse?.liked || false;
@@ -180,43 +189,43 @@ export default function HomeScreen() {
             }
 
             // Get the correct habit ID from the post
-            const habitId = post.habitId || post.habit_id || '';
+            const habitId = post.habitId || post.habit_id || "";
             const habit = habitsMap[habitId] || {};
-            
+
             // Get user data from cache or fetch it
             const postUserId = post.user_id || userId;
             const userData = await getUserData(postUserId);
-            
+
             // Create image source from S3 key
             let imageSource;
             if (post.s3Key) {
-              const s3KeyPath = post.s3Key.includes('hb-user-posts/') 
-                ? post.s3Key.split('hb-user-posts/')[1]
+              const s3KeyPath = post.s3Key.includes("hb-user-posts/")
+                ? post.s3Key.split("hb-user-posts/")[1]
                 : post.s3Key;
-              
+
               const imageUrl = `https://hb-user-posts.s3.amazonaws.com/${s3KeyPath}`;
               imageSource = { uri: imageUrl };
             } else {
               imageSource = require("../assets/images/adi.png");
             }
-            
+
             return {
               id: post.post_id,
               post_id: post.post_id,
               user_id: postUserId,
               username: userData.display_name,
-              profile_picture: userData.profile_picture ? 
-                { uri: userData.profile_picture } : 
-                require("../assets/images/adi.png"),
-              avatarState: post.avatarState || 'idle',
+              profile_picture: userData.profile_picture
+                ? { uri: userData.profile_picture }
+                : require("../assets/images/adi.png"),
+              avatarState: post.avatarState || "idle",
               image: imageSource,
-              image_url: post.s3Key || '',
-              caption: post.caption || post.comments || '',
+              image_url: post.s3Key || "",
+              caption: post.caption || post.comments || "",
               timestamp: formatTimestamp(post.timestamp || post.created_at || Date.now()),
               likes: post.likes || 0,
               streak: post.streak || 0,
               habitId: habitId,
-              habitName: habit.habit_name || 'Unknown Habit',
+              habitName: habit.habit_name || "Unknown Habit",
               comments: [], // Initialize with empty array, will be populated after fetch
               liked: isLiked,
               likesCount: likesCount,
@@ -260,17 +269,17 @@ export default function HomeScreen() {
                 comments: commentsWithUserData,
               };
             } catch (error) {
-              console.error('Error fetching comments for post:', post.post_id, error);
+              console.error("Error fetching comments for post:", post.post_id, error);
               return post;
             }
           })
         );
-        
+
         setPosts(postsWithComments);
       } else {
         setPosts([]);
       }
-      
+
       setError(null);
     } catch (err) {
       console.error("Error fetching data:", err);
@@ -282,38 +291,34 @@ export default function HomeScreen() {
   };
 
   const handleDeletePost = async (postId: string) => {
-    Alert.alert(
-      "Delete Post",
-      "Are you sure you want to delete this post?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel"
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deletePost(currentUserId, postId);
-              // Remove the post from the local state
-              setPosts(posts.filter(post => post.id !== postId));
-              Alert.alert("Success", "Post deleted successfully");
-            } catch (error) {
-              console.error("Error deleting post:", error);
-              Alert.alert("Error", "Failed to delete post. Please try again.");
-            }
+    Alert.alert("Delete Post", "Are you sure you want to delete this post?", [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deletePost(currentUserId, postId);
+            // Remove the post from the local state
+            setPosts(posts.filter((post) => post.id !== postId));
+            Alert.alert("Success", "Post deleted successfully");
+          } catch (error) {
+            console.error("Error deleting post:", error);
+            Alert.alert("Error", "Failed to delete post. Please try again.");
           }
-        }
-      ]
-    );
+        },
+      },
+    ]);
   };
 
   // Initial data fetch
   useEffect(() => {
     fetchData();
   }, []);
-  
+
   // Refresh data when screen comes into focus
   useFocusEffect(
     useCallback(() => {
@@ -328,8 +333,8 @@ export default function HomeScreen() {
   }, []);
 
   const handlePostPress = (post: Post) => {
-    console.log('Opening modal with post:', post);
-    console.log('Post comments:', post.comments);
+    console.log("Opening modal with post:", post);
+    console.log("Post comments:", post.comments);
     setSelectedPost(post);
   };
 
@@ -340,10 +345,10 @@ export default function HomeScreen() {
   const handleComment = async (postId: string, text: string, parentId?: string) => {
     try {
       await createComment(postId, currentUserId, text, parentId);
-      
+
       // Fetch updated comments for this specific post
       const updatedCommentsData = await getComments(postId);
-      
+
       // Transform the new comments with user data
       const updatedCommentsWithUserData = await Promise.all(
         (updatedCommentsData.comments || []).map(async (comment: any) => {
@@ -373,35 +378,32 @@ export default function HomeScreen() {
       );
 
       // Update both the posts state and the selectedPost state
-      setPosts(currentPosts => 
-        currentPosts.map(post => 
-          post.id === postId 
-            ? { ...post, comments: updatedCommentsWithUserData }
-            : post
+      setPosts((currentPosts) =>
+        currentPosts.map((post) =>
+          post.id === postId ? { ...post, comments: updatedCommentsWithUserData } : post
         )
       );
 
       // Update the selectedPost state to reflect the new comments
       if (selectedPost && selectedPost.id === postId) {
-        setSelectedPost(prevPost => 
+        setSelectedPost((prevPost) =>
           prevPost ? { ...prevPost, comments: updatedCommentsWithUserData } : null
         );
       }
-
     } catch (error) {
-      console.error('Error posting comment:', error);
-      Alert.alert('Error', 'Failed to post comment');
+      console.error("Error posting comment:", error);
+      Alert.alert("Error", "Failed to post comment");
     }
   };
 
   const handleLikePost = async (postId: string) => {
     try {
       await likePost(postId, currentUserId);
-      console.log('Liked post:', postId);
-      
+      console.log("Liked post:", postId);
+
       // Update posts state to reflect the new like status
-      setPosts(currentPosts =>
-        currentPosts.map(post =>
+      setPosts((currentPosts) =>
+        currentPosts.map((post) =>
           post.id === postId
             ? {
                 ...post,
@@ -414,7 +416,7 @@ export default function HomeScreen() {
 
       // Update selectedPost if it's the one being liked
       if (selectedPost?.id === postId) {
-        setSelectedPost(prevPost =>
+        setSelectedPost((prevPost) =>
           prevPost
             ? {
                 ...prevPost,
@@ -425,8 +427,8 @@ export default function HomeScreen() {
         );
       }
     } catch (error) {
-      console.error('Error liking post:', error);
-      Alert.alert('Error', 'Failed to like post');
+      console.error("Error liking post:", error);
+      Alert.alert("Error", "Failed to like post");
     }
   };
 
@@ -438,7 +440,7 @@ export default function HomeScreen() {
     const habitColor = habit.color || "#4CAF50";
 
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.card}
         onPress={() => handlePostPress(item)}
         activeOpacity={0.9}
@@ -455,10 +457,7 @@ export default function HomeScreen() {
             <Text style={styles.timestamp}>{item.timestamp}</Text>
           </View>
 
-          <TouchableOpacity 
-            style={styles.deleteButton}
-            onPress={() => handleDeletePost(item.id)}
-          >
+          <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeletePost(item.id)}>
             <Ionicons name="trash-outline" size={20} color="#FF3B30" />
           </TouchableOpacity>
         </View>
@@ -469,13 +468,13 @@ export default function HomeScreen() {
         </View>
 
         {/* Post Image */}
-        <Image 
-          source={item.image} 
-          style={styles.postImage} 
+        <Image
+          source={item.image}
+          style={styles.postImage}
           resizeMode="cover"
           onError={(e) => {
-            console.error('Image loading error:', e.nativeEvent.error);
-            console.error('Failed URL:', item.image?.uri); // For debugging
+            console.error("Image loading error:", e.nativeEvent.error);
+            console.error("Failed URL:", item.image?.uri); // For debugging
           }}
           defaultSource={require("../assets/images/adi.png")}
         />
@@ -483,10 +482,7 @@ export default function HomeScreen() {
         {/* Post Footer */}
         <View style={styles.footer}>
           <View style={styles.footerActions}>
-            <TouchableOpacity 
-              style={styles.actionButton}
-              onPress={() => handleLikePost(item.id)}
-            >
+            <TouchableOpacity style={styles.actionButton} onPress={() => handleLikePost(item.id)}>
               <Ionicons
                 name={item.liked ? "heart" : "heart-outline"}
                 size={24}
@@ -495,17 +491,12 @@ export default function HomeScreen() {
               <Text style={styles.actionText}>{item.likesCount}</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={styles.actionButton}
-              onPress={() => handlePostPress(item)}
-            >
+            <TouchableOpacity style={styles.actionButton} onPress={() => handlePostPress(item)}>
               <Ionicons name="chatbubble-outline" size={24} color="#666" />
-              <Text style={styles.actionText}>
-                {item.comments.length}
-              </Text>
+              <Text style={styles.actionText}>{item.comments.length}</Text>
             </TouchableOpacity>
           </View>
-          
+
           {item.caption && <Text style={styles.caption}>{item.caption}</Text>}
         </View>
       </TouchableOpacity>
@@ -514,17 +505,17 @@ export default function HomeScreen() {
 
   useEffect(() => {
     const cleanupInterval = setInterval(() => {
-      setUserCache(prevCache => {
+      setUserCache((prevCache) => {
         const now = Date.now();
         const newCache: CachedUserData = {};
-        
+
         // Only keep non-expired entries
         Object.entries(prevCache).forEach(([userId, userData]) => {
           if (!isCacheExpired(userData.timestamp)) {
             newCache[userId] = userData;
           }
         });
-        
+
         return newCache;
       });
     }, CACHE_DURATION); // Run cleanup at the same interval as cache duration
@@ -556,10 +547,7 @@ export default function HomeScreen() {
         ) : error ? (
           <View style={styles.errorContainer}>
             <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity 
-              style={styles.retryButton}
-              onPress={fetchData}
-            >
+            <TouchableOpacity style={styles.retryButton} onPress={fetchData}>
               <Text style={styles.retryButtonText}>Retry</Text>
             </TouchableOpacity>
           </View>
@@ -738,19 +726,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#6B7280",
   },
-  streakBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f3f4f6",
-    borderRadius: 20,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  streakText: {
-    fontSize: 12,
-    fontWeight: "600",
-    marginLeft: 4,
-  },
   postImage: {
     width: "100%",
     height: 320,
@@ -759,8 +734,8 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   footerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 8,
   },
   caption: {
@@ -768,14 +743,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginRight: 16,
   },
   actionText: {
     marginLeft: 4,
     fontSize: 14,
-    color: '#666',
+    color: "#666",
   },
   bottomNav: {
     flexDirection: "row",
@@ -805,6 +780,6 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     padding: 8,
-    marginLeft: 'auto',
+    marginLeft: "auto",
   },
 });

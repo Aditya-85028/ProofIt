@@ -4,6 +4,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import SwipeableNavigation from "../../components/SwipeableNavigation";
+import StreakBadge from "../../components/StreakBadge";
+import { handleUrlParams } from "expo-router/build/fork/getStateFromPath-forks";
 
 type Friend = {
   id: string;
@@ -40,10 +42,7 @@ export default function FriendsScreen() {
           <Text style={styles.habbitText}>{item.currentHabbit}</Text>
         </View>
       </View>
-      <View style={styles.streakBadge}>
-        <Ionicons name="flame" size={16} color="#FF9800" />
-        <Text style={styles.streakText}>{item.streak}</Text>
-      </View>
+      <StreakBadge streak={item.streak}></StreakBadge>
     </TouchableOpacity>
   );
 
@@ -138,20 +137,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#6B7280",
     marginTop: 2,
-  },
-  streakBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f3f4f6",
-    borderRadius: 16,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  streakText: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginLeft: 4,
-    color: "#111827",
   },
   addButtonText: {
     color: "#fff",

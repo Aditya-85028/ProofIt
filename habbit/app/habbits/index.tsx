@@ -1,6 +1,14 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useFocusEffect } from "expo-router";
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -18,8 +26,6 @@ type Habbit = {
   color?: string; // Added color property
 };
 
-
-
 // Using the SwipeableHabbitCard component instead of the static HabbitCard
 
 const Habbits = () => {
@@ -32,10 +38,10 @@ const Habbits = () => {
       setIsLoading(true);
       // Get the current user's ID
       const { userId } = await getCurrentUser();
-      
+
       // Fetch the user's habits
       const response = await fetchUserHabits(userId);
-      
+
       if (response && response.habits) {
         // Transform the API response to match our Habbit type
         const transformedHabits = response.habits.map((habit: any) => ({
@@ -44,9 +50,9 @@ const Habbits = () => {
           streak: habit.streak || 0,
           goal: habit.goal || `Do ${habit.habit_name} every day`,
           progress: habit.progress || 0.5,
-          color: habit.color || "#4CAF50"
+          color: habit.color || "#4CAF50",
         }));
-        
+
         setHabits(transformedHabits);
       } else {
         setHabits([]);
@@ -63,14 +69,14 @@ const Habbits = () => {
   // Handle habit deletion
   const handleDeleteHabit = (habitId: string) => {
     // Remove the habit from the state
-    setHabits(currentHabits => currentHabits.filter(habit => habit.id !== habitId));
+    setHabits((currentHabits) => currentHabits.filter((habit) => habit.id !== habitId));
   };
 
   // Use both useEffect for initial load and useFocusEffect for when returning to this screen
   useEffect(() => {
     fetchHabits();
   }, []);
-  
+
   // This will run every time the screen comes into focus
   useFocusEffect(
     useCallback(() => {
@@ -97,7 +103,7 @@ const Habbits = () => {
         ) : error ? (
           <View style={styles.errorContainer}>
             <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.retryButton}
               onPress={() => {
                 setIsLoading(true);
@@ -107,7 +113,7 @@ const Habbits = () => {
                   try {
                     const { userId } = await getCurrentUser();
                     const response = await fetchUserHabits(userId);
-                    
+
                     if (response && response.habits) {
                       const transformedHabits = response.habits.map((habit: any) => ({
                         id: habit.habit_id || habit.id || String(Math.random()),
@@ -115,9 +121,9 @@ const Habbits = () => {
                         streak: habit.streak || 0,
                         goal: habit.goal || `Do ${habit.habit_name} every day`,
                         progress: habit.progress || 0.5,
-                        color: habit.color || "#4CAF50"
+                        color: habit.color || "#4CAF50",
                       }));
-                      
+
                       setHabits(transformedHabits);
                     } else {
                       setHabits([]);
@@ -139,11 +145,7 @@ const Habbits = () => {
           <ScrollView style={styles.content}>
             {habits.length > 0 ? (
               habits.map((habbit) => (
-                <SwipeableHabbitCard 
-                  key={habbit.id} 
-                  habbit={habbit} 
-                  onDelete={handleDeleteHabit}
-                />
+                <SwipeableHabbitCard key={habbit.id} habbit={habbit} onDelete={handleDeleteHabit} />
               ))
             ) : (
               <View style={styles.emptyContainer}>
@@ -153,10 +155,7 @@ const Habbits = () => {
           </ScrollView>
         )}
 
-        <TouchableOpacity 
-          style={styles.addButton}
-          onPress={() => router.push("/habbits/create")}
-        >
+        <TouchableOpacity style={styles.addButton} onPress={() => router.push("/habbits/create")}>
           <Text style={styles.addButtonText}>+ Add New Habbit</Text>
         </TouchableOpacity>
       </SafeAreaView>
@@ -234,69 +233,15 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
   habbitName: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#111827",
-  },
-  streakBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f3f4f6",
-    borderRadius: 16,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  streakText: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginLeft: 4,
     color: "#111827",
   },
   goalText: {
     fontSize: 14,
     color: "#6B7280",
     marginBottom: 12,
-  },
-  progressContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  progressBar: {
-    flex: 1,
-    height: 8,
-    backgroundColor: "#e5e7eb",
-    borderRadius: 4,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    borderRadius: 4,
-  },
-  progressText: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "#6B7280",
-    width: 40,
-    textAlign: "right",
   },
   addButton: {
     backgroundColor: "#4CAF50",

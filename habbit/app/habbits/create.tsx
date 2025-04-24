@@ -1,26 +1,25 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, ScrollView, ActivityIndicator, FlatList } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  ScrollView,
+  ActivityIndicator,
+  FlatList,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { getCurrentUser } from "aws-amplify/auth";
-
-// Predefined color options for habits
-const COLORS = [
-  { id: 1, value: "#4CAF50", name: "Green" },
-  { id: 2, value: "#2196F3", name: "Blue" },
-  { id: 3, value: "#F44336", name: "Red" },
-  { id: 4, value: "#FF9800", name: "Orange" },
-  { id: 5, value: "#9C27B0", name: "Purple" },
-  { id: 6, value: "#00BCD4", name: "Cyan" },
-  { id: 7, value: "#FFEB3B", name: "Yellow" },
-  { id: 8, value: "#795548", name: "Brown" },
-];
+import ColorPicker, { Colors } from "../../components/ColorPicker";
 
 const CreateHabbit = () => {
   const [habitName, setHabitName] = useState("");
   const [cadence, setCadence] = useState("1");
-  const [selectedColor, setSelectedColor] = useState(COLORS[0].value);
+  const [selectedColor, setSelectedColor] = useState(Colors[0].value);
   const [isLoading, setIsLoading] = useState(false);
   const [userId, setUserId] = useState("");
   const [isUserLoading, setIsUserLoading] = useState(true);
@@ -64,21 +63,21 @@ const CreateHabbit = () => {
     try {
       // API endpoint URL from the project
       const apiUrl = "https://y8lbtj64c9.execute-api.us-east-1.amazonaws.com/prod/add_habit";
-      
+
       // Convert cadence to a number and validate it
       const cadenceNumber = parseInt(cadence);
       if (isNaN(cadenceNumber) || cadenceNumber < 1 || cadenceNumber > 7) {
         throw new Error("Cadence must be a number between 1 and 7");
       }
-      
+
       // Build query parameters
       const queryParams = new URLSearchParams({
         user_id: userId,
         habit_name: habitName.trim(),
         cadence: cadenceNumber.toString(), // Convert the number to string for URL params
-        color: selectedColor
+        color: selectedColor,
       }).toString();
-      
+
       const response = await fetch(`${apiUrl}?${queryParams}`, {
         method: "POST",
         headers: {
@@ -93,11 +92,11 @@ const CreateHabbit = () => {
       }
 
       Alert.alert("Success", "Habit created successfully!", [
-        { text: "OK", onPress: () => router.replace("/habbits") }
+        { text: "OK", onPress: () => router.replace("/habbits") },
       ]);
     } catch (error) {
       console.error("Error creating habit:", error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
       Alert.alert("Error", `Failed to create habit: ${errorMessage}`);
       // Also log the full error for debugging
       console.log("Full error object:", error);
@@ -152,35 +151,17 @@ const CreateHabbit = () => {
 
         <View style={styles.formGroup}>
           <Text style={styles.label}>Color</Text>
-          <View style={styles.colorContainer}>
-            {COLORS.map((color) => (
-              <TouchableOpacity
-                key={color.id}
-                style={[
-                  styles.colorOption,
-                  { backgroundColor: color.value },
-                  selectedColor === color.value && styles.selectedColorOption,
-                ]}
-                onPress={() => setSelectedColor(color.value)}
-              >
-                {selectedColor === color.value && (
-                  <Ionicons name="checkmark" size={16} color="white" />
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
+          <ColorPicker selectedColor={selectedColor} onColorSelect={setSelectedColor} />
           <Text style={styles.helperText}>Select a color for your habit</Text>
         </View>
       </ScrollView>
 
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.submitButton, isLoading && styles.submitButtonDisabled]}
         onPress={handleSubmit}
         disabled={isLoading}
       >
-        <Text style={styles.submitButtonText}>
-          {isLoading ? "Creating..." : "Create Habit"}
-        </Text>
+        <Text style={styles.submitButtonText}>{isLoading ? "Creating..." : "Create Habit"}</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );

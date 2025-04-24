@@ -1,10 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { getCurrentUser } from "aws-amplify/auth";
 import { fetchUserHabits } from "../../utils/api";
+import StreakBadge from "../../components/StreakBadge";
+import ProgressBar from "../../components/ProgressBar";
 
 type Habit = {
   id: string;
@@ -28,15 +38,13 @@ const HabitDetail = () => {
         setIsLoading(true);
         // Get the current user's ID
         const { userId } = await getCurrentUser();
-        
+
         // Fetch all habits and find the one with matching ID
         const response = await fetchUserHabits(userId);
-        
+
         if (response && response.habits) {
-          const habitData = response.habits.find((h: any) => 
-            (h.habit_id || h.id) === id
-          );
-          
+          const habitData = response.habits.find((h: any) => (h.habit_id || h.id) === id);
+
           if (habitData) {
             // Transform the API response to match our Habit type
             setHabit({
@@ -46,7 +54,7 @@ const HabitDetail = () => {
               goal: habitData.goal || `Do ${habitData.habit_name || habitData.name} every day`,
               progress: habitData.progress || 0.5,
               color: habitData.color || "#4CAF50",
-              cadence: habitData.cadence || "1"
+              cadence: habitData.cadence || "1",
             });
           } else {
             setError("Habit not found");
@@ -83,10 +91,7 @@ const HabitDetail = () => {
     return (
       <SafeAreaView style={[styles.container, styles.centerContent]}>
         <Text style={styles.errorText}>{error || "Habit not found"}</Text>
-        <TouchableOpacity 
-          style={styles.button}
-          onPress={() => router.replace('/habbits')}
-        >
+        <TouchableOpacity style={styles.button} onPress={() => router.replace("/habbits")}>
           <Text style={styles.buttonText}>Go Back</Text>
         </TouchableOpacity>
       </SafeAreaView>
@@ -95,14 +100,13 @@ const HabitDetail = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-
       <ScrollView style={styles.content}>
         <View style={styles.navigationControls}>
-          <TouchableOpacity style={styles.iconButton} onPress={() => router.replace('/habbits')}>
+          <TouchableOpacity style={styles.iconButton} onPress={() => router.replace("/habbits")}>
             <Ionicons name="arrow-back" size={24} color="#333" />
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.iconButton} 
+          <TouchableOpacity
+            style={styles.iconButton}
             onPress={() => router.push(`/habbits/edit/${habit.id}`)}
           >
             <Ionicons name="pencil" size={24} color="#4CAF50" />
@@ -111,42 +115,31 @@ const HabitDetail = () => {
         <View style={[styles.card, { backgroundColor: habit.color }]}>
           <View style={styles.cardHeader}>
             <Text style={styles.habitName}>{habit.name}</Text>
-            <View style={styles.streakBadge}>
-              <Ionicons name="flame" size={16} color="#FFFFFF" />
-              <Text style={styles.streakText}>{habit.streak}</Text>
-            </View>
+            <StreakBadge streak={habit.streak}></StreakBadge>
           </View>
-
           <Text style={styles.goalText}>{habit.goal}</Text>
-
-          <View style={styles.progressContainer}>
-            <View style={styles.progressBar}>
-              <View 
-                style={[
-                  styles.progressFill, 
-                  { width: `${habit.progress * 100}%` }
-                ]} 
-              />
-            </View>
-            <Text style={styles.progressText}>{Math.round(habit.progress * 100)}%</Text>
-          </View>
+          <ProgressBar
+            progress={habit.progress}
+            backgroundColor="rgba(255, 255, 255, 0.3)"
+            fillColor="rgba(255, 255, 255, 0.8)"
+          />
         </View>
 
         <View style={styles.detailsSection}>
           <Text style={styles.sectionTitle}>Details</Text>
-          
+
           <View style={styles.detailItem}>
             <Text style={styles.detailLabel}>Cadence:</Text>
             <Text style={styles.detailValue}>
               {habit.cadence === "1" ? "Daily" : `${habit.cadence} days per week`}
             </Text>
           </View>
-          
+
           <View style={styles.detailItem}>
             <Text style={styles.detailLabel}>Current Streak:</Text>
             <Text style={styles.detailValue}>{habit.streak} days</Text>
           </View>
-          
+
           <View style={styles.detailItem}>
             <Text style={styles.detailLabel}>Progress:</Text>
             <Text style={styles.detailValue}>{Math.round(habit.progress * 100)}%</Text>
@@ -154,9 +147,14 @@ const HabitDetail = () => {
         </View>
 
         <View style={styles.actionsSection}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.actionButton, styles.completeButton]}
-            onPress={() => Alert.alert("Feature Coming Soon", "This feature will be available in a future update.")}
+            onPress={() =>
+              Alert.alert(
+                "Feature Coming Soon",
+                "This feature will be available in a future update."
+              )
+            }
           >
             <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
             <Text style={styles.actionButtonText}>Mark Complete</Text>
@@ -225,48 +223,10 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#FFFFFF",
   },
-  streakBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    borderRadius: 16,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  streakText: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginLeft: 4,
-    color: "#FFFFFF",
-  },
   goalText: {
     fontSize: 14,
     color: "rgba(255, 255, 255, 0.8)",
     marginBottom: 12,
-  },
-  progressContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  progressBar: {
-    flex: 1,
-    height: 8,
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
-    borderRadius: 4,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    backgroundColor: "rgba(255, 255, 255, 0.8)",
-    borderRadius: 4,
-  },
-  progressText: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "#FFFFFF",
-    width: 40,
-    textAlign: "right",
   },
   detailsSection: {
     backgroundColor: "#FFFFFF",

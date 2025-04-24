@@ -1,29 +1,28 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { getCurrentUser } from "aws-amplify/auth";
 import { fetchUserHabits, updateUserHabit } from "../../../utils/api";
+import ColorPicker, { Colors } from "../../../components/ColorPicker";
 
-// Predefined color options for habits (same as in create.tsx)
 //TODO THE BACK BUTTON IS NOT SENDING TO HOME PAGE PROPERLY FIX!!!!!
-const COLORS = [
-  { id: 1, value: "#4CAF50", name: "Green" },
-  { id: 2, value: "#2196F3", name: "Blue" },
-  { id: 3, value: "#F44336", name: "Red" },
-  { id: 4, value: "#FF9800", name: "Orange" },
-  { id: 5, value: "#9C27B0", name: "Purple" },
-  { id: 6, value: "#00BCD4", name: "Cyan" },
-  { id: 7, value: "#FFEB3B", name: "Yellow" },
-  { id: 8, value: "#795548", name: "Brown" },
-];
 
 const EditHabit = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [habitName, setHabitName] = useState("");
   const [cadence, setCadence] = useState("1");
-  const [selectedColor, setSelectedColor] = useState(COLORS[0].value);
+  const [selectedColor, setSelectedColor] = useState(Colors[0].value);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [userId, setUserId] = useState("");
@@ -37,15 +36,13 @@ const EditHabit = () => {
         // Get the current user's ID
         const { userId: currentUserId } = await getCurrentUser();
         setUserId(currentUserId);
-        
+
         // Fetch all habits and find the one with matching ID
         const response = await fetchUserHabits(currentUserId);
-        
+
         if (response && response.habits) {
-          const habitData = response.habits.find((h: any) => 
-            (h.habit_id || h.id) === id
-          );
-          
+          const habitData = response.habits.find((h: any) => (h.habit_id || h.id) === id);
+
           if (habitData) {
             // Pre-populate form with existing habit data
             setHabitName(habitData.habit_name || habitData.name);
@@ -93,27 +90,24 @@ const EditHabit = () => {
 
     try {
       // Call the API utility function to update the habit
-      await updateUserHabit(
-        userId,
-        id as string,
-        habitName.trim(),
-        cadence,
-        selectedColor
-      );
+      await updateUserHabit(userId, id as string, habitName.trim(), cadence, selectedColor);
 
       Alert.alert("Success", "Habit updated successfully!", [
-        { 
-          text: "OK", 
+        {
+          text: "OK",
           onPress: () => {
             // Navigate directly to the habit details page instead of going back
             // This will cause the page to refresh and show updated data
             router.replace(`/habbits/${id}`);
-          } 
-        }
+          },
+        },
       ]);
     } catch (error) {
       console.error("Error updating habit:", error);
-      Alert.alert("Error", `Failed to update habit: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
+      Alert.alert(
+        "Error",
+        `Failed to update habit: ${error instanceof Error ? error.message : "Unknown error occurred"}`
+      );
     } finally {
       setIsSaving(false);
     }
@@ -132,10 +126,7 @@ const EditHabit = () => {
     return (
       <SafeAreaView style={[styles.container, styles.centerContent]}>
         <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity 
-          style={styles.button}
-          onPress={() => router.back()}
-        >
+        <TouchableOpacity style={styles.button} onPress={() => router.back()}>
           <Text style={styles.buttonText}>Go Back</Text>
         </TouchableOpacity>
       </SafeAreaView>
@@ -179,35 +170,17 @@ const EditHabit = () => {
 
         <View style={styles.formGroup}>
           <Text style={styles.label}>Color</Text>
-          <View style={styles.colorContainer}>
-            {COLORS.map((color) => (
-              <TouchableOpacity
-                key={color.id}
-                style={[
-                  styles.colorOption,
-                  { backgroundColor: color.value },
-                  selectedColor === color.value && styles.selectedColorOption,
-                ]}
-                onPress={() => setSelectedColor(color.value)}
-              >
-                {selectedColor === color.value && (
-                  <Ionicons name="checkmark" size={16} color="white" />
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
+          <ColorPicker selectedColor={selectedColor} onColorSelect={setSelectedColor} />
           <Text style={styles.helperText}>Select a color for your habit</Text>
         </View>
       </ScrollView>
 
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.submitButton, isSaving && styles.submitButtonDisabled]}
         onPress={handleSubmit}
         disabled={isSaving}
       >
-        <Text style={styles.submitButtonText}>
-          {isSaving ? "Saving..." : "Save Changes"}
-        </Text>
+        <Text style={styles.submitButtonText}>{isSaving ? "Saving..." : "Save Changes"}</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );

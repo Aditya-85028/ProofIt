@@ -108,26 +108,7 @@ const Profile = () => {
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <TouchableOpacity
-              style={styles.modalCloseButton}
-              onPress={() => setModalVisible(false)}
-            >
-              <Ionicons name="close-outline" size={24} color="#333" />
-            </TouchableOpacity>
-            {selectedDay && (
-              <>
-                <Text style={styles.modalDate}>
-                  {new Date(selectedDay.date).toLocaleDateString()}
-                </Text>
-                <Image source={{ uri: selectedDay.imageUrl }} style={styles.modalImage} />
-              </>
-            )}
-          </View>
-        </View>
-      </Modal>
+      ></Modal>
     </SafeAreaView>
   );
 };

@@ -63,7 +63,7 @@ export default function GroupsScreen() {
       />
 
       <TouchableOpacity style={styles.addButton}>
-        <Text style={styles.addButtonText}>Find Your Groups on Habbit!</Text>
+        <Text style={styles.addButtonText}>Join a new group!</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
