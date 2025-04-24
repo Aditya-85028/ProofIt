@@ -15,6 +15,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { getCurrentUser } from "aws-amplify/auth";
 import { fetchUserHabits, updateUserHabit } from "../../../utils/api";
 import ColorPicker, { Colors } from "../../../components/ColorPicker";
+import CustomButton from "../../../components/CustomButton";
 
 //TODO THE BACK BUTTON IS NOT SENDING TO HOME PAGE PROPERLY FIX!!!!!
 
@@ -174,14 +175,11 @@ const EditHabit = () => {
           <Text style={styles.helperText}>Select a color for your habit</Text>
         </View>
       </ScrollView>
-
-      <TouchableOpacity
-        style={[styles.submitButton, isSaving && styles.submitButtonDisabled]}
+      <CustomButton
+        text={isSaving ? "Saving..." : "Save Changes"}
         onPress={handleSubmit}
         disabled={isSaving}
-      >
-        <Text style={styles.submitButtonText}>{isSaving ? "Saving..." : "Save Changes"}</Text>
-      </TouchableOpacity>
+      />
     </SafeAreaView>
   );
 };
@@ -248,43 +246,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#6B7280",
     marginTop: 4,
-  },
-  colorContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-    marginTop: 8,
-  },
-  colorOption: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  selectedColorOption: {
-    borderWidth: 2,
-    borderColor: "#fff",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  submitButton: {
-    backgroundColor: "#4CAF50",
-    padding: 16,
-    alignItems: "center",
-    margin: 16,
-    borderRadius: 12,
-  },
-  submitButtonDisabled: {
-    backgroundColor: "#9CA3AF",
-  },
-  submitButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
   },
   button: {
     backgroundColor: "#4CAF50",

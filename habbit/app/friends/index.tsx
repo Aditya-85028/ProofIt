@@ -6,6 +6,7 @@ import { router } from "expo-router";
 import SwipeableNavigation from "../../components/SwipeableNavigation";
 import StreakBadge from "../../components/StreakBadge";
 import { handleUrlParams } from "expo-router/build/fork/getStateFromPath-forks";
+import CustomButton from "../../components/CustomButton";
 
 type Friend = {
   id: string;
@@ -63,9 +64,7 @@ export default function FriendsScreen() {
           contentContainerStyle={styles.listContainer}
         />
 
-        <TouchableOpacity style={styles.addButton}>
-          <Text style={styles.addButtonText}>Find Your Friends on Habbit!</Text>
-        </TouchableOpacity>
+        <CustomButton text="Find Your Friends on Habbit!" onPress={() => {}} />
       </SafeAreaView>
     </SwipeableNavigation>
   );
@@ -88,13 +87,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: "#4CAF50",
-  },
-  addButton: {
-    backgroundColor: "#4CAF50",
-    padding: 16,
-    alignItems: "center",
-    margin: 16,
-    borderRadius: 12,
   },
   listContainer: {
     padding: 16,
@@ -137,10 +129,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#6B7280",
     marginTop: 2,
-  },
-  addButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
   },
 });

@@ -16,6 +16,7 @@ import { getCurrentUser } from "aws-amplify/auth";
 import { fetchUserHabits, deleteUserHabit } from "../../utils/api";
 import SwipeableNavigation from "../../components/SwipeableNavigation";
 import SwipeableHabbitCard from "../../components/SwipeableHabbitCard";
+import CustomButton from "../../components/CustomButton";
 
 type Habbit = {
   id: string;
@@ -154,10 +155,7 @@ const Habbits = () => {
             )}
           </ScrollView>
         )}
-
-        <TouchableOpacity style={styles.addButton} onPress={() => router.push("/habbits/create")}>
-          <Text style={styles.addButtonText}>+ Add New Habbit</Text>
-        </TouchableOpacity>
+        <CustomButton text="+ Add New Habbit" onPress={() => router.push("/habbits/create")} />
       </SafeAreaView>
     </SwipeableNavigation>
   );
@@ -242,18 +240,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#6B7280",
     marginBottom: 12,
-  },
-  addButton: {
-    backgroundColor: "#4CAF50",
-    padding: 16,
-    alignItems: "center",
-    margin: 16,
-    borderRadius: 12,
-  },
-  addButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
   },
 });
 

@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { getCurrentUser } from "aws-amplify/auth";
 import ColorPicker, { Colors } from "../../components/ColorPicker";
+import CustomButton from "../../components/CustomButton";
 
 const CreateHabbit = () => {
   const [habitName, setHabitName] = useState("");
@@ -156,13 +157,11 @@ const CreateHabbit = () => {
         </View>
       </ScrollView>
 
-      <TouchableOpacity
-        style={[styles.submitButton, isLoading && styles.submitButtonDisabled]}
+      <CustomButton
+        text={isLoading ? "Creating..." : "Create Habit"}
         onPress={handleSubmit}
         disabled={isLoading}
-      >
-        <Text style={styles.submitButtonText}>{isLoading ? "Creating..." : "Create Habit"}</Text>
-      </TouchableOpacity>
+      />
     </SafeAreaView>
   );
 };
@@ -223,39 +222,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#6B7280",
     marginTop: 4,
-  },
-  colorContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  colorOption: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    margin: 8,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  selectedColorOption: {
-    borderWidth: 2,
-    borderColor: "#000",
-  },
-  submitButton: {
-    backgroundColor: "#4CAF50",
-    padding: 16,
-    alignItems: "center",
-    margin: 16,
-    borderRadius: 12,
-  },
-  submitButtonDisabled: {
-    backgroundColor: "#9CA3AF",
-  },
-  submitButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
   },
 });
 

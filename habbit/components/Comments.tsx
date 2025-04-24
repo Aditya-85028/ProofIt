@@ -1,14 +1,7 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  FlatList,
-} from 'react-native';
+import React, { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { formatTimestamp } from '../utils/dateUtils';
+import { formatTimestamp } from "../utils/dateUtils";
 
 // Define our custom Comment type with a different name to avoid conflicts
 export type PostComment = {
@@ -29,7 +22,7 @@ type CommentsProps = {
 };
 
 export default function Comments({ postId, userId, comments, onComment }: CommentsProps) {
-  const [newComment, setNewComment] = useState('');
+  const [newComment, setNewComment] = useState("");
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
 
   const renderReply = ({ item }: { item: PostComment }) => (
@@ -53,10 +46,7 @@ export default function Comments({ postId, userId, comments, onComment }: Commen
         <Text style={styles.commentText}>{item.text}</Text>
         <View style={styles.commentFooter}>
           <Text style={styles.timestamp}>{formatTimestamp(item.timestamp)}</Text>
-          <TouchableOpacity 
-            style={styles.replyButton}
-            onPress={() => setReplyingTo(item.id)}
-          >
+          <TouchableOpacity style={styles.replyButton} onPress={() => setReplyingTo(item.id)}>
             <Text style={styles.replyButtonText}>Reply</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.likeButton}>
@@ -79,7 +69,7 @@ export default function Comments({ postId, userId, comments, onComment }: Commen
   const handleSubmit = () => {
     if (newComment.trim()) {
       onComment(newComment.trim(), replyingTo || undefined);
-      setNewComment('');
+      setNewComment("");
       setReplyingTo(null);
     }
   };
@@ -95,9 +85,7 @@ export default function Comments({ postId, userId, comments, onComment }: Commen
       <View style={styles.inputContainer}>
         {replyingTo && (
           <View style={styles.replyingToContainer}>
-            <Text style={styles.replyingToText}>
-              Replying to comment
-            </Text>
+            <Text style={styles.replyingToText}>Replying to comment</Text>
             <TouchableOpacity onPress={() => setReplyingTo(null)}>
               <Ionicons name="close-circle" size={20} color="#666" />
             </TouchableOpacity>
@@ -110,7 +98,7 @@ export default function Comments({ postId, userId, comments, onComment }: Commen
           onChangeText={setNewComment}
           multiline
         />
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.submitButton, !newComment.trim() && styles.submitButtonDisabled]}
           onPress={handleSubmit}
           disabled={!newComment.trim()}
@@ -139,24 +127,24 @@ const styles = StyleSheet.create({
   replyContainer: {
     marginLeft: 32,
     borderLeftWidth: 1,
-    borderLeftColor: '#e5e5e5',
+    borderLeftColor: "#e5e5e5",
   },
   username: {
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 4,
   },
   commentText: {
     fontSize: 14,
-    color: '#333',
+    color: "#333",
   },
   commentFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 4,
   },
   timestamp: {
     fontSize: 12,
-    color: '#666',
+    color: "#666",
     marginRight: 16,
   },
   replyButton: {
@@ -164,15 +152,15 @@ const styles = StyleSheet.create({
   },
   replyButtonText: {
     fontSize: 12,
-    color: '#666',
+    color: "#666",
   },
   likeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   likeCount: {
     fontSize: 12,
-    color: '#666',
+    color: "#666",
     marginLeft: 4,
   },
   repliesList: {
@@ -180,28 +168,28 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     borderTopWidth: 1,
-    borderTopColor: '#e5e5e5',
+    borderTopColor: "#e5e5e5",
     padding: 16,
   },
   replyingToContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingBottom: 8,
   },
   replyingToText: {
     fontSize: 12,
-    color: '#666',
+    color: "#666",
   },
   input: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 8,
     minHeight: 40,
   },
   submitButton: {
-    position: 'absolute',
+    position: "absolute",
     right: 24,
     bottom: 24,
   },
@@ -209,7 +197,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   submitButtonText: {
-    color: '#4CAF50',
-    fontWeight: '600',
+    color: "#4CAF50",
+    fontWeight: "600",
   },
-}); 
+});

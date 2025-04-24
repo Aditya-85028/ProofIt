@@ -3,6 +3,7 @@ import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity } from "react
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import CustomButton from "../../components/CustomButton";
 
 type Group = {
   id: string;
@@ -62,9 +63,7 @@ export default function GroupsScreen() {
         contentContainerStyle={styles.listContainer}
       />
 
-      <TouchableOpacity style={styles.addButton}>
-        <Text style={styles.addButtonText}>Join a new group!</Text>
-      </TouchableOpacity>
+      <CustomButton text="Join a new group!" onPress={() => {}} />
     </SafeAreaView>
   );
 }
@@ -86,13 +85,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: "#4CAF50",
-  },
-  addButton: {
-    backgroundColor: "#4CAF50",
-    padding: 16,
-    alignItems: "center",
-    margin: 16,
-    borderRadius: 12,
   },
   listContainer: {
     padding: 16,
@@ -149,10 +141,5 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginLeft: 4,
     color: "#111827",
-  },
-  addButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
   },
 });
